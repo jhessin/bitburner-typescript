@@ -1,6 +1,22 @@
 /** @format */
 
-import { CrimeType, NS } from "../NetscriptDefinitions";
+import { NS } from "../NetscriptDefinitions";
+
+enum CrimeType {
+	shoplift = "Shoplift",
+	robStore = "Rob Store",
+	mug = "Mug",
+	larceny = "Larceny",
+	dealDrugs = "Deal Drugs",
+	bondForgery = "Bond Forgery",
+	traffickArms = "Traffick Arms",
+	homicide = "Homicide",
+	grandTheftAuto = "Grand Theft Auto",
+	kidnap = "Kidnap",
+	assassination = "Assassination",
+	heist = "Heist",
+}
+
 const crimeTypes: CrimeType[] = [
 	CrimeType.assassination,
 	CrimeType.bondForgery,
@@ -16,21 +32,69 @@ const crimeTypes: CrimeType[] = [
 	CrimeType.traffickArms,
 ];
 
+enum Stats {
+	money = "money",
+	hack = "hack",
+	str = "str",
+	def = "def",
+	dex = "dex",
+	agi = "agi",
+	cha = "cha",
+	int = "int",
+}
+
+const STATS: Stats[] = [
+	Stats.money,
+	Stats.hack,
+	Stats.str,
+	Stats.def,
+	Stats.dex,
+	Stats.agi,
+	Stats.cha,
+	Stats.int,
+];
+
+// TODO: Make this multifunction for different stats.
 /** @param {NS} ns */
 export async function main(ns: NS) {
 	ns.tail();
-	ns.clearLog();
 	ns.disableLog("ALL");
+	const args = ns.args[0].toString().toLowerCase() as Stats;
 	const crimeData = crimeTypes.map(crime => ({
 		name: crime,
 		stats: ns.singularity.getCrimeStats(crime),
 		getChance: () => ns.singularity.getCrimeChance(crime),
 		getValue() {
 			// calculate the crime value.
-			const cashPerSecond =
-				(this.stats.money / this.stats.time) * this.getChance();
+			let statToWatch = this.stats.money;
+			switch (args) {
+				case Stats.hack:
+					statToWatch = this.stats.hacking_exp;
+					break;
+				case Stats.str:
+					statToWatch = this.stats.strength_exp;
+					break;
+				case Stats.def:
+					statToWatch = this.stats.defense_exp;
+					break;
+				case Stats.dex:
+					statToWatch = this.stats.dexterity_exp;
+					break;
+				case Stats.agi:
+					statToWatch = this.stats.agility_exp;
+					break;
+				case Stats.cha:
+					statToWatch = this.stats.charisma_exp;
+					break;
+				case Stats.int:
+					statToWatch = this.stats.intelligence_exp;
+					break;
+				default:
+					statToWatch = this.stats.money;
+					break;
+			}
 
-			return cashPerSecond;
+			return (statToWatch / this.stats.time) * this.getChance();
 		},
 	}));
 	let bestCrime = crimeData[0];
@@ -42,6 +106,11 @@ export async function main(ns: NS) {
 		}
 		ns.tail();
 		ns.clearLog();
+		// default to money
+		if (!STATS.includes(args)) {
+			ns.print(`Unknown stat ${args} defaulting to money!`);
+		}
+		ns.print(`Optimizing for ${args}`);
 		ns.print(`Best crime is ${bestCrime.name}`);
 		ns.print(`====================================`);
 		ns.print(`\t EXPERIENCE GAIN`);
@@ -75,6 +144,7 @@ export async function main(ns: NS) {
 		ns.print(`\t kills: \t${bestCrime.stats.kills}`);
 		ns.print(`\t money: \t$${ns.formatNumber(bestCrime.stats.money)}`);
 		ns.print(`\t time : \t${ns.tFormat(bestCrime.stats.time)}`);
+		// only commit crimes if we aren't busy.
 		if (!ns.singularity.isBusy())
 			ns.singularity.commitCrime(bestCrime.name, false);
 		await ns.sleep(500);
