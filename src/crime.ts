@@ -2,36 +2,6 @@
 
 import { NS } from "../NetscriptDefinitions";
 
-enum CrimeType {
-	shoplift = "Shoplift",
-	robStore = "Rob Store",
-	mug = "Mug",
-	larceny = "Larceny",
-	dealDrugs = "Deal Drugs",
-	bondForgery = "Bond Forgery",
-	traffickArms = "Traffick Arms",
-	homicide = "Homicide",
-	grandTheftAuto = "Grand Theft Auto",
-	kidnap = "Kidnap",
-	assassination = "Assassination",
-	heist = "Heist",
-}
-
-const crimeTypes: CrimeType[] = [
-	CrimeType.assassination,
-	CrimeType.bondForgery,
-	CrimeType.dealDrugs,
-	CrimeType.grandTheftAuto,
-	CrimeType.heist,
-	CrimeType.homicide,
-	CrimeType.kidnap,
-	CrimeType.larceny,
-	CrimeType.mug,
-	CrimeType.robStore,
-	CrimeType.shoplift,
-	CrimeType.traffickArms,
-];
-
 enum Stats {
 	money = "money",
 	hack = "hack",
@@ -57,6 +27,21 @@ const STATS: Stats[] = [
 // TODO: Make this multifunction for different stats.
 /** @param {NS} ns */
 export async function main(ns: NS) {
+	// get the crimetypes from the ns.enums
+	const crimeTypes = [
+		ns.enums.CrimeType.assassination,
+		ns.enums.CrimeType.bondForgery,
+		ns.enums.CrimeType.dealDrugs,
+		ns.enums.CrimeType.grandTheftAuto,
+		ns.enums.CrimeType.heist,
+		ns.enums.CrimeType.homicide,
+		ns.enums.CrimeType.kidnap,
+		ns.enums.CrimeType.larceny,
+		ns.enums.CrimeType.mug,
+		ns.enums.CrimeType.robStore,
+		ns.enums.CrimeType.shoplift,
+		ns.enums.CrimeType.traffickArms,
+	];
 	ns.tail();
 	ns.disableLog("ALL");
 	const args = ns.args[0].toString().toLowerCase() as Stats;
