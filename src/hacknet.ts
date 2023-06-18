@@ -7,11 +7,15 @@ const cashPercent = 0.9;
 /** @param {NS} ns */
 export async function main(ns: NS) {
 	while (true) {
+		ns.tail();
+		ns.disableLog("ALL");
+		ns.clearLog();
 		const currentCash = ns.getServerMoneyAvailable("home") * cashPercent;
 		if (
 			ns.hacknet.numNodes() < ns.hacknet.maxNumNodes() &&
 			ns.hacknet.getPurchaseNodeCost() <= currentCash
 		) {
+			ns.print("Purchasing nodes");
 			ns.hacknet.purchaseNode();
 		}
 

@@ -6,7 +6,7 @@
 
 /** @format */
 import { NS } from "@ns";
-import { getServers } from "/libs";
+import { backdoorServers, getServers } from "/libs";
 
 /** @param {NS} ns */
 export async function main(ns: NS) {
@@ -38,12 +38,11 @@ export async function main(ns: NS) {
 		ns.httpworm(server);
 		try {
 			ns.nuke(server);
-			ns.singularity.connect(server);
-			await ns.singularity.installBackdoor();
 		} catch (error) {
 			ns.print(error);
 			continue;
 		}
 	}
+	await backdoorServers(ns);
 	// next(ns);
 }

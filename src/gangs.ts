@@ -1,10 +1,14 @@
 /** @format */
 
 import { NS } from "../NetscriptDefinitions";
+
+// These are the tasks that are assigned at appropriate times
 const trainingTask = "Train Combat";
 const cashTask = "Strongarm Civilians";
 const territoryTask = "Territory Warfare";
 const wantedTask = "Vigilante Justice";
+
+// These are all the gangs in the game.
 const OTHER_GANGS = [
 	"Tetrads",
 	"The Syndicate",
@@ -31,11 +35,15 @@ export async function main(ns: NS) {
 
 	// default to list all tasks
 	if (task.startsWith("ls")) {
-		ns.tail();
 		while (true) {
+			ns.tail();
 			ns.clearLog();
 			ns.disableLog("ALL");
-			ns.print(ns.gang.getTaskNames());
+			const allTasks = ns.gang.getTaskNames();
+			ns.print(`Valid task names:`);
+			for (const task of allTasks) {
+				ns.print(`\t ${task}`);
+			}
 			const warChance = winChance(ns);
 			const wantedLevel = ns.gang.getGangInformation().wantedLevel;
 			if (warChance < 0.99) {
@@ -43,16 +51,23 @@ export async function main(ns: NS) {
 				ns.print("Preparing for war!");
 				ns.gang.setTerritoryWarfare(false);
 				await war(ns);
-			} else if (wantedLevel > 1) {
+			} else if (wantedLevel > 2) {
+				ns.print(`Lowest winChance = ${ns.formatPercent(warChance)}`);
 				ns.print(`Wanted level = ${wantedLevel}`);
 				ns.print("Fighting Crime");
 				await fightCrime(ns);
-			} else {
+			} else if (wantedLevel > 1) {
 				ns.print(`Lowest winChance = ${ns.formatPercent(warChance)}`);
 				ns.print(`Wanted level = ${wantedLevel}`);
 				ns.print("Splitting Justice!");
 				ns.gang.setTerritoryWarfare(true);
 				await splitJustice(ns);
+			} else {
+				ns.print(`Lowest winChance = ${ns.formatPercent(warChance)}`);
+				ns.print(`Wanted level = ${wantedLevel}`);
+				ns.print("Cashing out!");
+				ns.gang.setTerritoryWarfare(true);
+				await cashOut(ns);
 			}
 			await ascend(ns);
 			ns.print(success ? "SUCCESS!" : "FAILED!");
@@ -93,7 +108,7 @@ export async function war(ns: NS) {
 }
 
 /** @param {NS} ns */
-export async function cash(ns: NS) {
+export async function cashOut(ns: NS) {
 	// loop through for training
 	for (const gm of gms) {
 		success = ns.gang.setMemberTask(gm, cashTask);
@@ -136,7 +151,7 @@ async function fightCrime(ns: NS) {
 async function splitJustice(ns: NS) {
 	// loop through for training
 	gms.forEach((gm, i) => {
-		if (i < gms.length / 4) success = ns.gang.setMemberTask(gm, wantedTask);
+		if (i < 1) success = ns.gang.setMemberTask(gm, wantedTask);
 		else success = ns.gang.setMemberTask(gm, cashTask);
 	});
 }

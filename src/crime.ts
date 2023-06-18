@@ -11,18 +11,32 @@ enum Stats {
 	agi = "agi",
 	cha = "cha",
 	int = "int",
+	karma = "karma",
+	kills = "kills",
 }
 
-const STATS: Stats[] = [
-	Stats.money,
-	Stats.hack,
-	Stats.str,
-	Stats.def,
-	Stats.dex,
-	Stats.agi,
-	Stats.cha,
-	Stats.int,
-];
+// const STATS: Stats[] = [
+// 	Stats.money,
+// 	Stats.hack,
+// 	Stats.str,
+// 	Stats.def,
+// 	Stats.dex,
+// 	Stats.agi,
+// 	Stats.cha,
+// 	Stats.int,
+// 	Stats.karma,
+// 	Stats.kills,
+// ];
+
+function statData(ns: NS, stat: Stats): string {
+	switch (stat) {
+		case Stats.kills:
+			return `Current Player kills = ${ns.getPlayer().numPeopleKilled}`;
+
+		default:
+			return "";
+	}
+}
 
 // TODO: Make this multifunction for different stats.
 /** @param {NS} ns */
@@ -83,31 +97,29 @@ export async function main(ns: NS) {
 		},
 	}));
 	let bestCrime = crimeData[0];
-
+	let oldBest = bestCrime;
 	while (true) {
 		for (const crime of crimeData) {
 			if (!bestCrime) bestCrime = crime;
 			if (bestCrime.getValue() < crime.getValue()) bestCrime = crime;
 		}
+		if (bestCrime.name !== oldBest.name) {
+			ns.singularity.stopAction();
+			oldBest = bestCrime;
+		}
 		ns.tail();
 		ns.clearLog();
-		// default to money
-		if (!STATS.includes(args)) {
-			ns.print(`Unknown stat ${args} defaulting to money!`);
-		}
 		ns.print(`Optimizing for ${args}`);
+		ns.print(statData(ns, args));
 		ns.print(`Best crime is ${bestCrime.name}`);
 		ns.print(`====================================`);
 		ns.print(`\t EXPERIENCE GAIN`);
 		ns.print(`====================================`);
 		ns.print(
-			`\t agility     : \t${ns.formatNumber(bestCrime.stats.agility_exp)}`,
+			`\t hacking     : \t${ns.formatNumber(bestCrime.stats.hacking_exp)}`,
 		);
 		ns.print(
 			`\t strength    : \t${ns.formatNumber(bestCrime.stats.strength_exp)}`,
-		);
-		ns.print(
-			`\t charisma    : \t${ns.formatNumber(bestCrime.stats.charisma_exp)}`,
 		);
 		ns.print(
 			`\t defense     : \t${ns.formatNumber(bestCrime.stats.defense_exp)}`,
@@ -116,7 +128,10 @@ export async function main(ns: NS) {
 			`\t dexterity   : \t${ns.formatNumber(bestCrime.stats.dexterity_exp)}`,
 		);
 		ns.print(
-			`\t hacking     : \t${ns.formatNumber(bestCrime.stats.hacking_exp)}`,
+			`\t agility     : \t${ns.formatNumber(bestCrime.stats.agility_exp)}`,
+		);
+		ns.print(
+			`\t charisma    : \t${ns.formatNumber(bestCrime.stats.charisma_exp)}`,
 		);
 		ns.print(
 			`\t intelligence: \t${ns.formatNumber(bestCrime.stats.intelligence_exp)}`,
