@@ -14,12 +14,12 @@ export async function main(ns: NS) {
 	if (!WORK_TYPES.includes(arg)) {
 		ns.tail();
 		ns.disableLog("ALL");
-		ns.print(`Unknown work type ${arg}`);
-		ns.print("Valid values are:");
+		ns.tprint(`Unknown work type ${arg}`);
+		ns.tprint("Valid values are:");
 		for (const work of WORK_TYPES) {
-			ns.print(`\t ${work}`);
+			ns.tprint(`\t ${work}`);
 		}
-		ns.print(`Defaulting to ${WORK_TYPES[0]} work`);
+		ns.tprint(`Defaulting to ${WORK_TYPES[0]} work`);
 		arg = WORK_TYPES[0];
 		await ns.sleep(500);
 	}
@@ -30,7 +30,7 @@ export async function main(ns: NS) {
 			try {
 				ns.singularity.joinFaction(faction);
 			} catch (error) {
-				ns.print(error);
+				ns.tprint(error);
 			}
 		}
 		for (const faction of ns.getPlayer().factions) {

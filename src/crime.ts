@@ -58,7 +58,7 @@ export async function main(ns: NS) {
 	];
 	ns.tail();
 	ns.disableLog("ALL");
-	const args = ns.args[0].toString().toLowerCase() as Stats;
+	const args = ns.args[0] as Stats;
 	const crimeData = crimeTypes.map(crime => ({
 		name: crime,
 		stats: ns.singularity.getCrimeStats(crime),

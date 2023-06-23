@@ -6,18 +6,26 @@ export function restart(ns: NS) {
 	ns.spawn("start.js");
 }
 
-export function getServers(ns: NS): string[] {
+/**
+ * @param filter: A callback function for testing wheather to include a server
+ * or not.
+ */
+export function getServers(
+	ns: NS,
+	filter: (server: string) => boolean = () => true,
+): string[] {
 	const servers: Set<string> = new Set<string>();
 	const scannedServers: Set<string> = new Set();
-	function subServers(target?: string): string[] | void {
-		if (!target || scannedServers.has(target)) return;
+	function subServers(target: string = 'home'): string[] | void {
+		if (scannedServers.has(target)) return;
+		if (filter(target)) servers.add(target);
 		scannedServers.add(target);
-		const next = ns.scan(target);
-		for (const server of next) {
-			servers.add(server);
+		const nextServers = ns.scan(target);
+		for (const server of nextServers) {
+			if (filter(server)) servers.add(server);
 			subServers(server);
 		}
-		return next;
+		return nextServers;
 	}
 	subServers();
 	return Array.from(servers);
@@ -33,7 +41,8 @@ export async function backdoorServers(ns: NS): Promise<void> {
 				const parent = ns.singularity.getCurrentServer();
 				ns.singularity.connect(child);
 				try {
-					await ns.singularity.installBackdoor();
+					if (ns.hasRootAccess(child))
+						await ns.singularity.installBackdoor();
 				} catch (e) {
 					ns.print(e);
 				} finally {
@@ -44,4 +53,8 @@ export async function backdoorServers(ns: NS): Promise<void> {
 		}
 	}
 	await children("home");
+}
+
+export function getBatchPort(ns: NS) {
+	return ns.getPortHandle(1);
 }

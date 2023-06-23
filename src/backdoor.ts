@@ -4,6 +4,7 @@
 
 /** @format */
 import { NS } from "@ns";
+import { backdoorServers, getServers } from "libs";
 
 /** @param {NS} ns */
 export async function main(ns: NS) {
@@ -25,10 +26,13 @@ export async function main(ns: NS) {
 		}
 		return serverList
 	}
+	ns.tprint(GetAllServers())
 
 	const hosts = GetAllServers();
 	for (const host of hosts) {
 		// nukes the server
 		openPorts(host)
 	}
+	await backdoorServers(ns);
+	// next(ns);
 }
