@@ -1,18 +1,18 @@
 /** @format */
 
-import { getBatchPort, getServers } from "libs";
+import { getServers } from "libs";
+import { main as Crack } from "crack";
 import { NS } from "../../NetscriptDefinitions";
 
 const hackScript = "batching/hack.js";
 const growScript = "batching/grow.js";
 const weakenScript = "batching/weaken.js";
 const hgwScript = "batching/hgw.js";
-const nukeScript = "crack.js"
 
 enum Phases {
-	Growing,
-	Weakening,
-	Hacking,
+	Growing = 'Growing',
+	Weakening = 'Weakening',
+	Hacking = 'Hacking',
 }
 
 export async function main(ns: NS) {
@@ -21,13 +21,40 @@ export async function main(ns: NS) {
 	// batchPort.clear();
 	// compile a list of all servers with ram and root access
 	// also total all the ram across all the servers.
-	let freeRam = 0;
+	let bufferTime = 500;
+
+	function printServerData(target: string) {
+		const cash = ns.getServerMoneyAvailable(target);
+		const maxCash = ns.getServerMaxMoney(target);
+		const percentCash = cash / maxCash;
+		const security = ns.getServerSecurityLevel(target);
+		const minSecurity = ns.getServerMinSecurityLevel(target);
+		const percentSecurity = (security - minSecurity)
+		const hackTime = ns.getHackTime(target);
+		const growTime = ns.getGrowTime(target);
+		const weakenTime = ns.getWeakenTime(target);
+		ns.print(`Target Server:	${target}`)
+		ns.print('========================================')
+		ns.print(`Current Cash:   $${ns.formatNumber(cash, 2)}`)
+		ns.print(`Max Cash        $${ns.formatNumber(maxCash, 2)}`)
+		ns.print(`% Cash          ${ns.formatPercent(percentCash)}`)
+		ns.print(`Security        ${ns.formatNumber(security, 2)}`)
+		ns.print(`Min Security    ${ns.formatNumber(minSecurity, 2)}`)
+		ns.print(`% Security      ${ns.formatPercent(percentSecurity)}`)
+		ns.print(`Hack Time       ${ns.tFormat(hackTime)}`)
+		ns.print(`Grow Time       ${ns.tFormat(growTime)}`)
+		ns.print(`Weaken Time     ${ns.tFormat(weakenTime)}`)
+	}
 
 	let runnableServers: string[];
 	let hackingPids: number[] = [];
 	let growingPids: number[] = [];
 	let weakenPids: number[] = [];
 	function getRunnableServers(): string[] {
+		// keep our pids clean.
+		hackingPids = hackingPids.filter(pid => ns.isRunning(pid))
+		growingPids = growingPids.filter(pid => ns.isRunning(pid))
+		weakenPids = weakenPids.filter(pid => ns.isRunning(pid))
 		return getServers(ns, s => {
 			const server = ns.getServer(s);
 			// exclude servers without enough free ram to run any of our scripts.
@@ -43,14 +70,15 @@ export async function main(ns: NS) {
 				return false;
 			// exclude servers you don't have root access to.
 			if (!ns.hasRootAccess(s)) return false;
-			freeRam += server.maxRam - server.ramUsed;
+			ns.scp([
+				hackScript,
+				growScript,
+				weakenScript,
+				hgwScript,
+			], s)
 			return true;
 		});
 
-		// keep our pids clean.
-		hackingPids = hackingPids.filter(pid => ns.isRunning(pid))
-		growingPids = growingPids.filter(pid => ns.isRunning(pid))
-		weakenPids = weakenPids.filter(pid => ns.isRunning(pid))
 	}
 
 	// This is the main prepping loop.
@@ -64,19 +92,19 @@ export async function main(ns: NS) {
 			runnableServers = getRunnableServers();
 			ns.print(`Runnable Servers: ${runnableServers.length}`)
 			ns.print(`Hackable Servers: ${targets.length}`)
-			ns.print(`Current Target: ${target}`)
+			printServerData(target)
 			if (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target))
 				phase = Phases.Growing
 			else if (ns.getServerSecurityLevel(target) > ns.getServerMinSecurityLevel(target))
 				phase = Phases.Weakening
 			else
 				phase = Phases.Hacking
-
+			ns.print(`Current Phase: ${phase}`)
 			for (const host of runnableServers) {
 				switch (phase) {
 					case Phases.Growing:
-						growingPids.push(ns.exec(growScript, host, undefined, target));
-						break;
+						growingPids.push(ns.exec(growScript, host, 1, target));
+						continue;
 					case Phases.Weakening:
 						while (growingPids.length > 0) {
 							const pid = growingPids.pop();
@@ -88,34 +116,43 @@ export async function main(ns: NS) {
 							if (!pid) continue;
 							ns.kill(pid)
 						}
-						weakenPids.push(ns.exec(weakenScript, host, undefined, target))
-						break
+						weakenPids.push(ns.exec(weakenScript, host, 1, target))
+						continue;
 					case Phases.Hacking:
-						hackingPids.push(ns.exec(hgwScript, host, undefined, target))
-						break;
+						while (growingPids.length > 0) {
+							const pid = growingPids.pop();
+							if (!pid) continue;
+							ns.kill(pid);
+						}
+						// The server is now prepped
+						return
 				}
 			}
-			await ns.sleep(500)
+			await ns.sleep(bufferTime)
 		}
 	}
 	// This is the main hacking loop.
 	async function hackIt(target: string) {
 		while (true) {
+			ns.tail();
+			ns.disableLog('ALL');
+			ns.clearLog();
 			// always keep our runnable servers up to date.
 			runnableServers = getRunnableServers();
+			ns.print(`Runnable Servers: ${runnableServers.length}`)
+			ns.print(`Hackable Servers: ${targets.length}`)
+			printServerData(target);
+			ns.print(`Current Phase: Hacking`)
 			for (const host of runnableServers) {
-
+				hackingPids.push(ns.exec(hgwScript, host, 1, target))
 			}
-			await ns.sleep(500)
+			await ns.sleep(bufferTime)
 		}
 	}
 	// Without formulas, a common de facto algorithm (credit to discord user xsinx) for finding the best server to target is to pare the list down to only servers with a hacking requirement of half your level, then divide their max money by the minimum security level. Pick whichever server scores highest. (For a fully functional batcher, you don't need to do that division, but if you had one of those you wouldn't be reading this.)
 	// Find hacking targets
 	ns.tprint('Nuking!')
-	const nukePid = ns.run(nukeScript);
-	while (ns.isRunning(nukePid)) {
-		await ns.sleep(500)
-	}
+	await Crack(ns)
 	ns.tprint('Finished nuking')
 	ns.tprint(`Current hacking level / 2: ${ns.getHackingLevel() / 2}`)
 	let targets: string[] = getServers(ns)
@@ -135,11 +172,16 @@ export async function main(ns: NS) {
 	})
 
 	if (targets.length === 0) {
-		ns.tprint(`You can't hack it! No hacking target available.`)
-		return;
+		targets.push('n00dles')
 	}
 	ns.tprint(`You can hack ${targets.length} servers`)
 	ns.tprint(`The best one is ${targets[0]}`)
 	ns.tprint(`Hacking ${targets[0]}`)
 	await prepIt(targets[0])
+	bufferTime = Math.max(
+		ns.getGrowTime(targets[0]),
+		ns.getHackTime(targets[0]),
+		ns.getWeakenTime(targets[0]),
+	)
+	await hackIt(targets[0])
 }

@@ -12,8 +12,6 @@ export async function main(ns: NS) {
 	// get the first argument as a work type.
 	let arg = (ns.args[0] as FactionWorkType) || WORK_TYPES[0];
 	if (!WORK_TYPES.includes(arg)) {
-		ns.tail();
-		ns.disableLog("ALL");
 		ns.tprint(`Unknown work type ${arg}`);
 		ns.tprint("Valid values are:");
 		for (const work of WORK_TYPES) {
@@ -24,8 +22,6 @@ export async function main(ns: NS) {
 		await ns.sleep(500);
 	}
 	while (true) {
-		ns.tail();
-		ns.clearLog();
 		for (const faction of ns.singularity.checkFactionInvitations()) {
 			try {
 				ns.singularity.joinFaction(faction);

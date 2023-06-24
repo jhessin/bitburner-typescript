@@ -26,7 +26,6 @@ export async function main(ns: NS) {
 		}
 		return serverList
 	}
-	ns.tprint(GetAllServers())
 
 	const hosts = GetAllServers();
 	for (const host of hosts) {

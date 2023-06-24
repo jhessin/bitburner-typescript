@@ -7,6 +7,13 @@ import { NS } from "@ns";
 
 /** @param {NS} ns */
 export async function main(ns: NS) {
+	function buyPrograms() {
+		ns.singularity.purchaseTor();
+		for (const program of ns.singularity.getDarkwebPrograms()) {
+			ns.singularity.purchaseProgram(program)
+		}
+	}
+
 	function openPorts(target: string) {
 		try { ns.brutessh(target) } catch { }
 		try { ns.ftpcrack(target) } catch { }
@@ -25,6 +32,8 @@ export async function main(ns: NS) {
 		}
 		return serverList
 	}
+
+	buyPrograms();
 
 	const hosts = GetAllServers();
 	for (const host of hosts) {
