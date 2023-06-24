@@ -1,10 +1,11 @@
 import type { NS } from "../NetscriptDefinitions"
 
 const scripts = [
-	"work.js",
-	"gangs.js",
-	// "batching/main.js"
+	// "work.js",
+	// "gangs.js",
 	"crack.js",
+	"crime.js",
+	"batching/main.js"
 ]
 
 export async function main(ns: NS) {

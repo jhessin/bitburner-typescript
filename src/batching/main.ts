@@ -1,6 +1,8 @@
 /** @format */
 
 import { getServers } from "libs";
+import { Batch, BatchMode } from "batching/batch";
+import { main as PurchaseServers } from "servers";
 import { main as Crack } from "crack";
 import { NS } from "../../NetscriptDefinitions";
 
@@ -8,6 +10,8 @@ const hackScript = "batching/hack.js";
 const growScript = "batching/grow.js";
 const weakenScript = "batching/weaken.js";
 const hgwScript = "batching/hgw.js";
+const basicHack = "basicHack.js";
+const version = 1;
 
 enum Phases {
 	Growing = 'Growing',
@@ -52,9 +56,6 @@ export async function main(ns: NS) {
 	let weakenPids: number[] = [];
 	function getRunnableServers(): string[] {
 		// keep our pids clean.
-		hackingPids = hackingPids.filter(pid => ns.isRunning(pid))
-		growingPids = growingPids.filter(pid => ns.isRunning(pid))
-		weakenPids = weakenPids.filter(pid => ns.isRunning(pid))
 		return getServers(ns, s => {
 			const server = ns.getServer(s);
 			// exclude servers without enough free ram to run any of our scripts.
@@ -65,6 +66,7 @@ export async function main(ns: NS) {
 					ns.getScriptRam(growScript),
 					ns.getScriptRam(weakenScript),
 					ns.getScriptRam(hgwScript),
+					ns.getScriptRam(basicHack),
 				)
 			)
 				return false;
@@ -75,6 +77,7 @@ export async function main(ns: NS) {
 				growScript,
 				weakenScript,
 				hgwScript,
+				basicHack,
 			], s)
 			return true;
 		});
@@ -85,12 +88,13 @@ export async function main(ns: NS) {
 	async function prepIt(target: string) {
 		let phase: Phases = Phases.Growing;
 		while (true) {
-			// always keep our runnable servers up to date.
 			ns.tail();
 			ns.disableLog('ALL');
 			ns.clearLog();
+			ns.print(`Script Version: ${version}`)
+			// always keep our runnable servers up to date.
 			runnableServers = getRunnableServers();
-			ns.print(`Runnable Servers: ${runnableServers.length}`)
+			ns.print(`Free Servers: ${runnableServers.length}`)
 			ns.print(`Hackable Servers: ${targets.length}`)
 			printServerData(target)
 			if (ns.getServerMoneyAvailable(target) < ns.getServerMaxMoney(target))
@@ -100,33 +104,14 @@ export async function main(ns: NS) {
 			else
 				phase = Phases.Hacking
 			ns.print(`Current Phase: ${phase}`)
-			for (const host of runnableServers) {
-				switch (phase) {
-					case Phases.Growing:
-						growingPids.push(ns.exec(growScript, host, 1, target));
-						continue;
-					case Phases.Weakening:
-						while (growingPids.length > 0) {
-							const pid = growingPids.pop();
-							if (!pid) continue;
-							ns.kill(pid);
-						}
-						while (hackingPids.length > 0) {
-							const pid = hackingPids.pop();
-							if (!pid) continue;
-							ns.kill(pid)
-						}
-						weakenPids.push(ns.exec(weakenScript, host, 1, target))
-						continue;
-					case Phases.Hacking:
-						while (growingPids.length > 0) {
-							const pid = growingPids.pop();
-							if (!pid) continue;
-							ns.kill(pid);
-						}
-						// The server is now prepped
-						return
-				}
+			switch (phase) {
+				case Phases.Growing:
+				case Phases.Weakening:
+					await (new Batch(ns, BatchMode.Prep, target)).execute(runnableServers);
+					break;
+				case Phases.Hacking:
+					// The server is now prepped
+					return
 			}
 			await ns.sleep(bufferTime)
 		}
@@ -134,19 +119,23 @@ export async function main(ns: NS) {
 	// This is the main hacking loop.
 	async function hackIt(target: string) {
 		while (true) {
+			await PurchaseServers(ns);
 			ns.tail();
 			ns.disableLog('ALL');
 			ns.clearLog();
+			ns.print(`Script Version: ${version}`)
+			const income = ns.getScriptIncome(ns.getScriptName(), ns.getHostname(), ...ns.args)
+			ns.print(`Script Income: $${ns.formatNumber(income, 2)}`)
+			const xp = ns.getScriptExpGain(ns.getScriptName(), ns.getHostname(), ...ns.args);
+			ns.print(`Script XP: ${ns.formatNumber(xp, 2)}`)
 			// always keep our runnable servers up to date.
 			runnableServers = getRunnableServers();
-			ns.print(`Runnable Servers: ${runnableServers.length}`)
+			ns.print(`Free Servers: ${runnableServers.length}`)
 			ns.print(`Hackable Servers: ${targets.length}`)
 			printServerData(target);
 			ns.print(`Current Phase: Hacking`)
-			for (const host of runnableServers) {
-				hackingPids.push(ns.exec(hgwScript, host, 1, target))
-			}
-			await ns.sleep(bufferTime)
+			const batch = new Batch(ns, BatchMode.HWGW, target)
+			await batch.execute(runnableServers)
 		}
 	}
 	// Without formulas, a common de facto algorithm (credit to discord user xsinx) for finding the best server to target is to pare the list down to only servers with a hacking requirement of half your level, then divide their max money by the minimum security level. Pick whichever server scores highest. (For a fully functional batcher, you don't need to do that division, but if you had one of those you wouldn't be reading this.)
@@ -178,10 +167,10 @@ export async function main(ns: NS) {
 	ns.tprint(`The best one is ${targets[0]}`)
 	ns.tprint(`Hacking ${targets[0]}`)
 	await prepIt(targets[0])
-	bufferTime = Math.max(
-		ns.getGrowTime(targets[0]),
-		ns.getHackTime(targets[0]),
-		ns.getWeakenTime(targets[0]),
-	)
+	// bufferTime = Math.max(
+	// 	ns.getGrowTime(targets[0]),
+	// 	ns.getHackTime(targets[0]),
+	// 	ns.getWeakenTime(targets[0]),
+	// )
 	await hackIt(targets[0])
 }
