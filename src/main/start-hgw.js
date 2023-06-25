@@ -1,4 +1,5 @@
 /* eslint-disable prefer-const */
+import { getServers } from "libs";
 import { createTable } from "main/lib";
 // import type { NS } from "../../NetscriptDefinitions";
 
@@ -28,12 +29,10 @@ export async function main(ns) {
 
 	// let targets = ['clarkinc', 'ecorp', '4sigma']
 	let targets = ["all", "all"]; // 'all' will use top calculated servers, unfortunately we won't know what they are :(
-	// let hosts = getServers(
-	// 	ns,
-	// 	(s) =>
-	// 		ns.getServerMaxRam(s) - ns.getServerUsedRam(s) >= ns.getScriptRam(hgwFile)
-	// );
-	let hosts = ["1687646599950", "1687646605020"];
+	let hosts = getServers(ns, (s) => ns.hasRootAccess(s)).sort(
+		(a, b) => ns.getServerMaxRam(b) - ns.getServerMaxRam(a)
+	);
+	// let hosts = ["iron-gym", "max-hardware"];
 
 	if (ns.args[0] && typeof ns.args[0] === "string" && ns.args[0] !== "kill") {
 		hosts = ns.args[0].split(",");
