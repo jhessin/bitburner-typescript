@@ -14,7 +14,7 @@ const RESPECT_THRESHOLD = 3e6;
 const AVG_COMBAT_THRESHOLD = 200;
 const HACKING_THRESHOLD = 200;
 const CHARISMA_THRESHOLD = 200;
-const WIN_CHANCE_THRESHOLD = .5;
+const WIN_CHANCE_THRESHOLD = 0.5;
 
 // These are all the gangs in the game.
 const OTHER_GANGS = [
@@ -30,7 +30,7 @@ let success = false;
 let gms: string[] = [];
 
 export async function main(ns: NS) {
-	if (ns.args[0] === 'help') {
+	if (ns.args[0] === "help") {
 		const allTasks = ns.gang.getTaskNames();
 		ns.tprint(`Valid task names:`);
 		for (const task of allTasks) {
@@ -40,7 +40,7 @@ export async function main(ns: NS) {
 
 	function stats() {
 		for (const gm of gms) {
-			ns.print(`${gm}: \t ${ns.gang.getMemberInformation(gm).task}`)
+			ns.print(`${gm}: \t ${ns.gang.getMemberInformation(gm).task}`);
 		}
 	}
 
@@ -85,14 +85,18 @@ export async function main(ns: NS) {
 			const result = ns.gang.getAscensionResult(gm);
 			if (!result) continue;
 			if (result.str > 1.5) success = !!ns.gang.ascendMember(gm);
-			const augsOnly = (ns.gang.getEquipmentNames().filter(eq => ns.gang.getEquipmentType(eq).startsWith('Aug') && !ns.gang.getMemberInformation(gm).augmentations.includes(eq)))
-			for (const eq of ns.gang.getEquipmentNames().filter(eq => !ns.gang.getMemberInformation(gm).augmentations.includes(eq))) {
+			// const augsOnly = (ns.gang.getEquipmentNames().filter(eq => ns.gang.getEquipmentType(eq).startsWith('Aug') && !ns.gang.getMemberInformation(gm).augmentations.includes(eq)))
+			for (const eq of ns.gang
+				.getEquipmentNames()
+				.filter(
+					(eq) => !ns.gang.getMemberInformation(gm).augmentations.includes(eq)
+				)) {
 				// Prioritize augmentations.
-				const type = ns.gang.getEquipmentType(eq);
+				// const type = ns.gang.getEquipmentType(eq);
 				// ns.print(`Purchasing ${type}: ${eq}`)
-				if ((augsOnly.length && type.startsWith("Aug")) || !augsOnly.length) {
-					ns.gang.purchaseEquipment(gm, eq);
-				}
+				// if ((augsOnly.length && type.startsWith("Aug")) || !augsOnly.length) {
+				ns.gang.purchaseEquipment(gm, eq);
+				// }
 			}
 		}
 	}
@@ -116,19 +120,21 @@ export async function main(ns: NS) {
 
 	function splitJustice(task = cashTask) {
 		gms.forEach((gm, i) => {
-			if (i < 1) success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, wantedTask));
+			if (i < 1)
+				success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, wantedTask));
 			else success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, task));
 		});
 	}
 
 	function splitCash(task = respectTask) {
 		gms.forEach((gm, i) => {
-			if (i < 1) success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, wantedTask))
-			else if (i < gms.length / 2) success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, cashTask));
+			if (i < 1)
+				success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, wantedTask));
+			else if (i < gms.length / 2)
+				success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, cashTask));
 			else success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, task));
 		});
 	}
-
 
 	// Initialize gms
 	gms = ns.gang.getMemberNames();
