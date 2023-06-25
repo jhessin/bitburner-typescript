@@ -8,13 +8,16 @@ const hackTrainingTask = 'Train Hacking';
 const charismaTrainingTask = 'Train Charisma';
 let cashTask = 'Strongarm Civilians';
 const territoryTask = 'Territory Warfare';
-const wantedTask = 'Vigilante Justice';
-let respectTask = 'Mug People';
+// const wantedTask = 'Vigilante Justice';
+const wantedTask = 'Ethical Hacking';
+// let respectTask = 'Mug People';
+let respectTask = 'Cyberterrorism';
 const RESPECT_THRESHOLD = 3e6;
 const AVG_COMBAT_THRESHOLD = 200;
 const HACKING_THRESHOLD = 200;
 const CHARISMA_THRESHOLD = 200;
 const WIN_CHANCE_THRESHOLD = 0.5;
+const ASCEND_THRESHOLD = 1.1; // A 10% increase?
 
 // These are all the gangs in the game.
 const OTHER_GANGS = [
@@ -84,7 +87,15 @@ export async function main(ns: NS) {
     for (const gm of gms) {
       const result = ns.gang.getAscensionResult(gm);
       if (!result) continue;
-      if (result.str > 1.5) success = !!ns.gang.ascendMember(gm);
+      const avg =
+        (result.hack +
+          result.str +
+          result.def +
+          result.dex +
+          result.agi +
+          result.cha) /
+        6;
+      if (avg > ASCEND_THRESHOLD) success = !!ns.gang.ascendMember(gm);
       // const augsOnly = (ns.gang.getEquipmentNames().filter(eq => ns.gang.getEquipmentType(eq).startsWith('Aug') && !ns.gang.getMemberInformation(gm).augmentations.includes(eq)))
       for (const eq of ns.gang
         .getEquipmentNames()
