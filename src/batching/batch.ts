@@ -51,9 +51,9 @@ export class Batch {
 			new Job(ns, JobType.Hack, target);
 		this.grow =
 			new Job(ns, JobType.Grow, target);
-		this.weaken = mode === BatchMode.HWGW ?
-			new Job(ns, JobType.Weaken, target) :
-			new Job(ns, JobType.DoubleWeaken, target);
+		this.weaken = mode === BatchMode.HGW ?
+			new Job(ns, JobType.DoubleWeaken, target) :
+			new Job(ns, JobType.Weaken, target);
 	}
 
 	get duration() {
@@ -82,7 +82,7 @@ export class Batch {
 		return Math.max(this.hack.ram, this.grow.ram, this.weaken.ram)
 	}
 
-	async execute(hosts: string[]) {
+	execute(hosts: string[]) {
 		// filter out hosts that can't run any 1 of our scripts.
 		const hostPool = new HostPool(this.ns, hosts);
 		hosts = hostPool.hosts.filter(h => {
@@ -192,7 +192,7 @@ export class Batch {
 			case BatchMode.Prep:
 				if (this.ns.getServerMoneyAvailable(grow.target) < this.ns.getServerMaxMoney(grow.target)) {
 					// Do a grow/weaken cycle if we can
-					if (this.totalRam >= weaken.ram + grow.ram) {
+					if (hostPool.totalRam >= weaken.ram + grow.ram) {
 						weaken.execute(host1)
 						if (host1freeRam >= weaken.ram + grow.ram) {
 							grow.execute(host1, weaken.duration - spacer)
@@ -203,8 +203,9 @@ export class Batch {
 						// just grow for now
 						grow.execute(host1)
 					}
-				} else if (this.ns.getServerSecurityLevel(weaken.target) > this.ns.getServerMinSecurityLevel(weaken.target)) {
+				} else {
 					// Just weaken it!
+					this.ns.print(`executing weaken on ${host1}`)
 					weaken.execute(host1)
 				}
 		}

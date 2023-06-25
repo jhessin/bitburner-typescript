@@ -116,15 +116,15 @@ export async function main(ns: NS) {
 
 	function splitJustice(task = cashTask) {
 		gms.forEach((gm, i) => {
-			if (i < 1) success = ns.gang.setMemberTask(gm, wantedTask);
+			if (i < 1) success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, wantedTask));
 			else success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, task));
 		});
 	}
 
 	function splitCash(task = respectTask) {
 		gms.forEach((gm, i) => {
-			if (i < 1 && ns.gang.getGangInformation().wantedLevel > 1) success = ns.gang.setMemberTask(gm, wantedTask)
-			else if (i < gms.length / 2) success = ns.gang.setMemberTask(gm, cashTask);
+			if (i < 1) success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, wantedTask))
+			else if (i < gms.length / 2) success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, cashTask));
 			else success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, task));
 		});
 	}

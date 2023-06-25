@@ -22,7 +22,7 @@ export class Job {
 	hackPercent = .5;
 
 	constructor(ns: NS, jobType: JobType, target: string) {
-		ns.print(`Job v${version}`)
+		// ns.print(`Job v${version}`)
 		this.ns = ns;
 		this.jobType = jobType;
 		this.target = target;

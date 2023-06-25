@@ -2,6 +2,7 @@
 
 import { getServers } from "libs";
 import { Batch, BatchMode } from "batching/batch";
+import { Job, JobType } from "batching/job";
 import { main as PurchaseServers } from "servers";
 import { main as Crack } from "crack";
 import { NS } from "../../NetscriptDefinitions";
@@ -51,9 +52,6 @@ export async function main(ns: NS) {
 	}
 
 	let runnableServers: string[];
-	let hackingPids: number[] = [];
-	let growingPids: number[] = [];
-	let weakenPids: number[] = [];
 	function getRunnableServers(): string[] {
 		// keep our pids clean.
 		return getServers(ns, s => {
@@ -104,14 +102,19 @@ export async function main(ns: NS) {
 			else
 				phase = Phases.Hacking
 			ns.print(`Current Phase: ${phase}`)
-			switch (phase) {
-				case Phases.Growing:
-				case Phases.Weakening:
-					await (new Batch(ns, BatchMode.Prep, target)).execute(runnableServers);
-					break;
-				case Phases.Hacking:
-					// The server is now prepped
-					return
+			for (const host of runnableServers) {
+				switch (phase) {
+					case Phases.Growing:
+						(new Job(ns, JobType.Grow, target)).execute(host)
+						break;
+					case Phases.Weakening:
+						(new Job(ns, JobType.Weaken, target)).execute(host)
+						// (new Batch(ns, BatchMode.Prep, target)).execute(runnableServers);
+						break;
+					case Phases.Hacking:
+						// The server is now prepped
+						return
+				}
 			}
 			await ns.sleep(bufferTime)
 		}
@@ -135,7 +138,7 @@ export async function main(ns: NS) {
 			printServerData(target);
 			ns.print(`Current Phase: Hacking`)
 			const batch = new Batch(ns, BatchMode.HWGW, target)
-			await batch.execute(runnableServers)
+			batch.execute(runnableServers)
 		}
 	}
 	// Without formulas, a common de facto algorithm (credit to discord user xsinx) for finding the best server to target is to pare the list down to only servers with a hacking requirement of half your level, then divide their max money by the minimum security level. Pick whichever server scores highest. (For a fully functional batcher, you don't need to do that division, but if you had one of those you wouldn't be reading this.)
