@@ -29,9 +29,9 @@ export async function main(ns) {
 
   // let targets = ['clarkinc', 'ecorp', '4sigma']
   let targets = ['all', 'all']; // 'all' will use top calculated servers, unfortunately we won't know what they are :(
-  let hosts = getServers(ns, (s) => ns.hasRootAccess(s)).sort(
-    (a, b) => ns.getServerMaxRam(b) - ns.getServerMaxRam(a),
-  );
+  let hosts = getServers(ns, (s) => ns.hasRootAccess(s))
+    .sort((a, b) => ns.getServerMaxRam(b) - ns.getServerMaxRam(a))
+    .slice(0, 2);
   // let hosts = ["iron-gym", "max-hardware"];
 
   if (ns.args[0] && typeof ns.args[0] === 'string' && ns.args[0] !== 'kill') {
@@ -53,6 +53,7 @@ export async function main(ns) {
 
   // 183.91 for 1 (restart) + 4 (table borders, heading) + 1 ('total' line) + 4 (hosts) - sounds right
   // total height: 223, so add 40 for title bar and bottom border of window
+  ns.tail();
   ns.resizeTail(880, ((targets.length || 1) + 6) * 18.4 + 40); // 18.4 line height, 40 for title bar and window
 
   while (true) {
