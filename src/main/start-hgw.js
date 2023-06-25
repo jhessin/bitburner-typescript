@@ -1,4 +1,9 @@
+/* eslint-disable prefer-const */
 import { createTable } from "main/lib";
+// import type { NS } from "../../NetscriptDefinitions";
+
+const libFile = "main/lib.js";
+const hgwFile = "main/tools/batcher-hgw.js";
 
 /** @param {NS} ns */
 export async function main(ns) {
@@ -13,7 +18,7 @@ export async function main(ns) {
 	killAllByName(ns, "weak");
 	await ns.sleep(1000);
 
-	var obj = eval("window['obj'] = window['obj'] || {}");
+	const obj = eval("window['obj'] = window['obj'] || {}");
 	obj.batchers = {};
 	ns.tprint("usage: start-hgw [kill]");
 	// let hosts = ['peta', 'peta-0', 'peta-1', 'peta-2', 'peta-3']
@@ -23,23 +28,27 @@ export async function main(ns) {
 
 	// let targets = ['clarkinc', 'ecorp', '4sigma']
 	let targets = ["all", "all"]; // 'all' will use top calculated servers, unfortunately we won't know what they are :(
-	let hosts = ["peta", "peta-0"];
+	// let hosts = getServers(
+	// 	ns,
+	// 	(s) =>
+	// 		ns.getServerMaxRam(s) - ns.getServerUsedRam(s) >= ns.getScriptRam(hgwFile)
+	// );
+	let hosts = ["1687646599950", "1687646605020"];
 
-	if (ns.args[0] && ns.args[0] !== "kill") {
+	if (ns.args[0] && typeof ns.args[0] === "string" && ns.args[0] !== "kill") {
 		hosts = ns.args[0].split(",");
 		targets = hosts.map(() => "all");
 	}
 
-	if (ns.args[1]) {
+	if (ns.args[1] && typeof ns.args[1] === "string") {
 		targets = ns.args[1].split(",");
 	}
 
-	let runningOn = ns.getHostname();
 	for (let i = 0; i < hosts.length; i++) {
-		let host = hosts[i];
-		await ns.scp("lib.js", host);
+		const host = hosts[i];
+		ns.scp(libFile, host);
 		await ns.sleep(50);
-		await ns.scp("/tools/batcher-hgw.js", host);
+		ns.scp(hgwFile, host);
 		await ns.sleep(50);
 	}
 
@@ -48,7 +57,7 @@ export async function main(ns) {
 	ns.resizeTail(880, ((targets.length || 1) + 6) * 18.4 + 40); // 18.4 line height, 40 for title bar and window
 
 	while (true) {
-		let pids = [];
+		const pids = [];
 
 		for (let i = 0; i < hosts.length; i++) {
 			await killScripts(ns, hosts[i]);
@@ -62,8 +71,8 @@ export async function main(ns) {
 		await ns.sleep(1000);
 		let skip = 0;
 
-		let scriptsWithArgs = [];
-		let skips = [];
+		const scriptsWithArgs = [];
+		const skips = [];
 		for (let i = 0; i < targets.length; i++) {
 			const host = hosts[i];
 			const target = targets[i];
@@ -76,8 +85,8 @@ export async function main(ns) {
 			} else {
 				skips.push(undefined);
 			}
-			let script = "/tools/batcher-hgw.js";
-			let pid = ns.exec(script, host, 1, ...scriptArgs);
+			const script = hgwFile;
+			const pid = ns.exec(script, host, 1, ...scriptArgs);
 			pids.push(pid);
 			scriptsWithArgs.push({ pid, script, scriptArgs, target, host });
 			await ns.sleep(2000);
@@ -91,8 +100,8 @@ export async function main(ns) {
 		//   ns.resizeTail(1300, 240, pids[i])
 		// }
 
-		var restartAt = new Date().valueOf() + 90 * 60 * 1000;
-		var restartTime = new Date(restartAt).toLocaleTimeString();
+		const restartAt = new Date().valueOf() + 90 * 60 * 1000;
+		const restartTime = new Date(restartAt).toLocaleTimeString();
 		ns.print(
 			`Done starting batchers, waiting 90 minutes to restart at ${restartTime}...`
 		);
@@ -101,19 +110,19 @@ export async function main(ns) {
 		);
 
 		while (new Date().valueOf() < restartAt) {
-			let results = [];
+			const results = [];
 			for (let i = 0; i < scriptsWithArgs.length; i++) {
-				let { pid, script, scriptArgs, target, host } = scriptsWithArgs[i];
+				let { script, scriptArgs, target, host } = scriptsWithArgs[i];
 				try {
-					let income = ns.getScriptIncome(script, host, ...scriptArgs) || 0;
-					let expGain = ns.getScriptExpGain(script, host, ...scriptArgs) || 0;
-					let hourly = income * 3600;
+					const income = ns.getScriptIncome(script, host, ...scriptArgs) || 0;
+					const expGain = ns.getScriptExpGain(script, host, ...scriptArgs) || 0;
+					const hourly = income * 3600;
 					let state = "???";
 					let stateEnd = "???";
 
 					// see if we have batcher
 					if (obj && obj.batchers) {
-						let b = Object.values(obj.batchers).find((x) => x.host === host);
+						const b = Object.values(obj.batchers).find((x) => x.host === host);
 						if (b) {
 							target = b.target;
 							state = b.state;
@@ -144,7 +153,7 @@ export async function main(ns) {
 				state: "RUNNING",
 				stateEnd: new Date(restartAt).toLocaleTimeString(),
 			});
-			let table = createTable(
+			const table = createTable(
 				results.map((x) => ({
 					target: x.target,
 					host: x.host,
@@ -165,7 +174,7 @@ export async function main(ns) {
 				}
 			);
 			ns.clearLog();
-			let time = new Date().valueOf();
+			const time = new Date().valueOf();
 			ns.print(
 				`Restart in ${ns.nFormat(
 					(restartAt - time) / 60000,
@@ -238,7 +247,7 @@ function killAllByName(ns, command) {
 			command.length > 0 &&
 			command !== "all"
 		) {
-			var list = ns.ps(x.hostname);
+			const list = ns.ps(x.hostname);
 			let count = 0;
 			list.forEach((info) => {
 				if (
