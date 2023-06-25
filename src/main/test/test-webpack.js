@@ -10,22 +10,25 @@ and access things like the global Player and AllServers
 
 */
 
-
 function getWebpackInternals() {
-  let w = eval('window')
+  let w = eval('window');
   return new Promise((resolve) => {
     const id = 'fakeId' + Math.random();
-    w['webpackJsonp'].push(["web", {
-      [id]: function (module, __webpack_exports__, __webpack_require__) {
-        resolve([module, __webpack_exports__, __webpack_require__])
-      }
-    }, [[id]]]);
+    w['webpackJsonp'].push([
+      'web',
+      {
+        [id]: function (module, __webpack_exports__, __webpack_require__) {
+          resolve([module, __webpack_exports__, __webpack_require__]);
+        },
+      },
+      [[id]],
+    ]);
   });
 }
 /** @param {NS} ns */
 export async function main(ns) {
   // get webpack internals
-  let internals = await getWebpackInternals()
+  let internals = await getWebpackInternals();
 
   // // I know the index(1) and property (a) of the Player object
   // let player = internals[2].c[1].exports.a
@@ -34,18 +37,18 @@ export async function main(ns) {
   // we'll store getWebpackInternals on the window object if you want to use it
   // in the console, and create a 'findExports' function on the windows object
   // as a helper.  Pass it a function that takes an export
-  let w = eval('window')
-  w.getWebpackInternals = getWebpackInternals
+  let w = eval('window');
+  w.getWebpackInternals = getWebpackInternals;
 
   // find exports using a filter function that accepts an export
   w.findExports = (fn) => {
-    let results = []
-    Object.entries(internals[2].c).forEach(x => {
-      let id = x[0]
-      let module = x[1]
-      let exports = module.exports
+    let results = [];
+    Object.entries(internals[2].c).forEach((x) => {
+      let id = x[0];
+      let module = x[1];
+      let exports = module.exports;
       if (exports) {
-        Object.entries(exports).forEach(y => {
+        Object.entries(exports).forEach((y) => {
           // call function with the export value.  For instance, the global
           // 'Player' object is internals[2].c[1].exports.a
           //    internals is the result of getWebpackInternals()
@@ -59,41 +62,47 @@ export async function main(ns) {
           // The function should return 'true' if we want the export returned.
           // For example to find the player we might use this:
           //    findExports(export => export.achievements)
-          let [name, value] = y
+          let [name, value] = y;
           if (fn(value)) {
-            results.push({ id, module, exports, name, value })
+            results.push({ id, module, exports, name, value });
           }
-        })
+        });
       }
-    })
-    return results
-  }
+    });
+    return results;
+  };
 
   // find modules using a filter function that accepts a module
   w.findModules = (fn) => {
-    let results = []
-    Object.entries(internals[2].c).forEach(x => {
-      if (x && x[0] && x[1] && typeof(x[1]) === 'object' && x[1].exports) {
-        let id = x[0]
-        let module = x[1]
-        let exports = module.exports
+    let results = [];
+    Object.entries(internals[2].c).forEach((x) => {
+      if (x && x[0] && x[1] && typeof x[1] === 'object' && x[1].exports) {
+        let id = x[0];
+        let module = x[1];
+        let exports = module.exports;
         if (fn(module)) {
-          results.push(module)
+          results.push(module);
         }
       }
-    })
-    return results
-  }
+    });
+    return results;
+  };
 
   // this list should have one entry, the Player export
-  w.PLAYER_EXPORTS = w.findExports(x => x && typeof (x) === 'object' && x.achievements)
-  w.PLAYER = w.PLAYER_EXPORTS[0].value
-
+  w.PLAYER_EXPORTS = w.findExports(
+    (x) => x && typeof x === 'object' && x.achievements,
+  );
+  w.PLAYER = w.PLAYER_EXPORTS[0].value;
 
   // this finds 5 modules that export exactly 10 functions (like 'Server' module)
   // length is 10 in steam version on 2022-10-22, 11 in dev version
-  var modules = findModules(m => m && Object.entries(m.exports).filter(x => typeof(x[1]) === 'function').length === 11)
-  w.ALL_SERVERS_EXPORTS = modules
+  var modules = findModules(
+    (m) =>
+      m &&
+      Object.entries(m.exports).filter((x) => typeof x[1] === 'function')
+        .length === 11,
+  );
+  w.ALL_SERVERS_EXPORTS = modules;
 
   // I happen to know that the first one, with { i:24, l: true } is the one, but I
   // can maybe tell by looking at the export signatures.
@@ -122,10 +131,8 @@ export async function main(ns) {
   // w.n00dles.maxRam = 1073741824
   // w.n00dles.moneyMax = 1.9e12
 
-
   // this list should have one entry, the AllServers export
   // ALLSERVERS_EXPORTS[0].value['n00dles'].moneyMax = 1.9e12
   // not exported w.ALLSERVERS_EXPORTS = w.findExports(x => x && typeof(x) === 'object' && x.length >= 60 && x[0].hostname)
   // w.ALLSERVERS_2 = w.findExports(x => x && typeof(x) === 'object' && x['n00dles'])
-
 }

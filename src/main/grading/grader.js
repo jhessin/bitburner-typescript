@@ -7,9 +7,9 @@
 // --- END CONFIG SECTION ---
 
 // --- CONFIG SECTION ---
-const testFile="/tools/batcher.js"; // File to run to initiate testing
-const testTimeLimit=3600000; // Graded time, 30 min + 1/2 weaken time to compare with my hour run
-const testFileArgs=['150,2,19,25']; // (not used for mine)
+const testFile = '/tools/batcher.js'; // File to run to initiate testing
+const testTimeLimit = 3600000; // Graded time, 30 min + 1/2 weaken time to compare with my hour run
+const testFileArgs = ['150,2,19,25']; // (not used for mine)
 const host = null;
 // --- END CONFIG SECTION ---
 
@@ -157,24 +157,32 @@ have to update them somehow.  Well, since read() is free, maybe I can write the 
 and place it on the server?
 */
 
-
 /** @param {NS} ns */
 export async function main(ns) {
   let startTime = Date.now();
-  let startMoney = ns.getServerMoneyAvailable("home");
+  let startMoney = ns.getServerMoneyAvailable('home');
   if (host) {
-    ns.rm(testFile, host)
-    await ns.scp(testFile, host)
-    ns.exec(testFile, host, 1, ...testFileArgs)
+    ns.rm(testFile, host);
+    await ns.scp(testFile, host);
+    ns.exec(testFile, host, 1, ...testFileArgs);
   } else {
     ns.run(testFile, 1, ...testFileArgs);
   }
   await ns.asleep(testTimeLimit);
   let finishTime = Date.now();
-  let finishMoney = ns.getServerMoneyAvailable("home");
+  let finishMoney = ns.getServerMoneyAvailable('home');
 
-  let message = `Finished testing after ${ns.nFormat((finishTime-startTime)/1000,"0:00:00")}. Money increased by ${ns.nFormat(finishMoney-startMoney,"$0.00a")}, effective profit is ${ns.nFormat((finishMoney-startMoney)*60000/(finishTime-startTime),"$0.00a")}/min`
+  let message = `Finished testing after ${ns.nFormat(
+    (finishTime - startTime) / 1000,
+    '0:00:00',
+  )}. Money increased by ${ns.nFormat(
+    finishMoney - startMoney,
+    '$0.00a',
+  )}, effective profit is ${ns.nFormat(
+    ((finishMoney - startMoney) * 60000) / (finishTime - startTime),
+    '$0.00a',
+  )}/min`;
   console.log(message);
   ns.tprint(message);
-  ns.write('/var/log/grader.txt', message + '\n', 'a')
+  ns.write('/var/log/grader.txt', message + '\n', 'a');
 }

@@ -16,7 +16,7 @@ This particular script calls mega-batch.js for each server we can hack
 
 */
 
-import { getCustomFormulas } from "main/lib";
+import { getCustomFormulas } from 'main/lib';
 
 let myGetServer = null;
 
@@ -25,46 +25,46 @@ const hacking = getCustomFormulas();
 
 /** @param {NS} ns */
 export async function main(ns) {
-	ns.disableLog("ALL");
+  ns.disableLog('ALL');
 
-	let servers = {};
-	const scanServer = (hostname) => {
-		const server = ns.getServer(hostname);
-		servers[hostname] = server;
-		server.connections = ns.scan(hostname);
-		server.connections.forEach((name) => {
-			if (!servers[name]) scanServer(name);
-		});
-	};
-	scanServer("home");
+  let servers = {};
+  const scanServer = (hostname) => {
+    const server = ns.getServer(hostname);
+    servers[hostname] = server;
+    server.connections = ns.scan(hostname);
+    server.connections.forEach((name) => {
+      if (!servers[name]) scanServer(name);
+    });
+  };
+  scanServer('home');
 
-	let player = ns.getPlayer();
-	let hackableServers = Object.entries(servers)
-		.map((x) => x[1])
-		.filter(
-			(x) =>
-				x.hasAdminRights &&
-				x.moneyMax &&
-				x.requiredHackingSkill < player.skills.hacking &&
-				!x.purchasedByPlayer
-		);
-	hackableServers = hackableServers.filter((x) =>
-		[
-			"megacorp",
-			"ecorp",
-			"4sigma",
-			"b-and-a",
-			"omnitek",
-			"kuai-gong",
-			"nwo",
-			"blade",
-			"clarkinc",
-		].find((y) => y === x.hostname)
-	);
-	for (let i = 0; i < hackableServers.length; i++) {
-		let server = hackableServers[i];
-		// if (i === 0) ns.run('/tools/mega-batch.js', 1, '--host', server.hostname)
-		ns.run("/tools/mega-batch.js", 1, "--target", server.hostname);
-	}
-	ns.tprint("started all!");
+  let player = ns.getPlayer();
+  let hackableServers = Object.entries(servers)
+    .map((x) => x[1])
+    .filter(
+      (x) =>
+        x.hasAdminRights &&
+        x.moneyMax &&
+        x.requiredHackingSkill < player.skills.hacking &&
+        !x.purchasedByPlayer,
+    );
+  hackableServers = hackableServers.filter((x) =>
+    [
+      'megacorp',
+      'ecorp',
+      '4sigma',
+      'b-and-a',
+      'omnitek',
+      'kuai-gong',
+      'nwo',
+      'blade',
+      'clarkinc',
+    ].find((y) => y === x.hostname),
+  );
+  for (let i = 0; i < hackableServers.length; i++) {
+    let server = hackableServers[i];
+    // if (i === 0) ns.run('/tools/mega-batch.js', 1, '--host', server.hostname)
+    ns.run('/tools/mega-batch.js', 1, '--target', server.hostname);
+  }
+  ns.tprint('started all!');
 }

@@ -5,11 +5,11 @@ export async function main(ns) {
   // sing.getOwnedSourceFiles()
   // ns.tprint(JSON.stringify(sing.getOwnedSourceFiles(), null, 2))
   // ns.tprint(sing.createProgram('FTPCrack.exe', true))
-  commitCrime(ns, 'mug')
+  commitCrime(ns, 'mug');
 }
 
 /** @param {NS} ns */
 function commitCrime(ns, crime, focus = true) {
-  ns.tprint(`Committing crime: ${crime}${focus ? ' - FOCUSSED' : ''}`)
-  ns.singularity.commitCrime(crime, focus)
+  ns.tprint(`Committing crime: ${crime}${focus ? ' - FOCUSSED' : ''}`);
+  ns.singularity.commitCrime(crime, focus);
 }

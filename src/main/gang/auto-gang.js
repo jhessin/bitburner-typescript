@@ -32,11 +32,13 @@ Jobs are:
 
 */
 
-const DURATION = 5 * 60 * 1000 // 5 minutes
+const DURATION = 5 * 60 * 1000; // 5 minutes
 
-const newMemberNames = ('General Kenobi,General Zod,Admiral Akbar,Admiral Thrawn' +
-    ',Colonel Duke,Colonel Nick Fury,Major Tom,Major Paine' +
-    ',Corporal Klinger,Corporal Barnes,Sergeant Slaughter,Sergeant Smith').split(',')
+const newMemberNames = (
+  'General Kenobi,General Zod,Admiral Akbar,Admiral Thrawn' +
+  ',Colonel Duke,Colonel Nick Fury,Major Tom,Major Paine' +
+  ',Corporal Klinger,Corporal Barnes,Sergeant Slaughter,Sergeant Smith'
+).split(',');
 
 /** @param {NS} ns */
 export async function main(ns) {
@@ -44,71 +46,92 @@ export async function main(ns) {
   // ns.tprint(JSON.stringify(ns.gang.getTaskNames(), null, 2))
   // return
 
-  ns.disableLog('ALL')
+  ns.disableLog('ALL');
 
   // what gear will we buy after ascension?
-  let equipmentNames = ns.gang.getEquipmentNames()
-  let upgradeEquipmentNames = equipmentNames.filter(x => ['Weapon', 'Armor', 'Vehicle', 'Rootkit', 'Augmentation'].find(y => ns.gang.getEquipmentType(x) === y))
+  let equipmentNames = ns.gang.getEquipmentNames();
+  let upgradeEquipmentNames = equipmentNames.filter((x) =>
+    ['Weapon', 'Armor', 'Vehicle', 'Rootkit', 'Augmentation'].find(
+      (y) => ns.gang.getEquipmentType(x) === y,
+    ),
+  );
 
-  let cycle = 0
+  let cycle = 0;
 
   // with 6 jobs and 12 members, we should have two members on each
-  let cycleTasks = ['Train Combat', 'Train Combat',
-                    'Terrorism', 'Terrorism',
-                    'Human Trafficking', 'Territory Warfare']
+  let cycleTasks = [
+    'Train Combat',
+    'Train Combat',
+    'Terrorism',
+    'Terrorism',
+    'Human Trafficking',
+    'Territory Warfare',
+  ];
 
   while (true) {
-    let memberNames = ns.gang.getMemberNames()
-    ns.print(`Cycle ${cycle} activating for ${memberNames.length} gang members`)
+    let memberNames = ns.gang.getMemberNames();
+    ns.print(
+      `Cycle ${cycle} activating for ${memberNames.length} gang members`,
+    );
     memberNames.forEach((name, index) => {
-      let taskIndex = (cycle + index) % cycleTasks.length
+      let taskIndex = (cycle + index) % cycleTasks.length;
       if (taskIndex === 0) {
-        let result = ns.gang.ascendMember(name)
-        if (result) ns.print(`INFO: Ascended gang member ${name}:\n      Hack:${sf(result.hack)}, Str:${sf(result.str)}, Def:${sf(result.def)}, Dex:${sf(result.dex)}, Agi:${sf(result.agi)}`)
+        let result = ns.gang.ascendMember(name);
+        if (result)
+          ns.print(
+            `INFO: Ascended gang member ${name}:\n      Hack:${sf(
+              result.hack,
+            )}, Str:${sf(result.str)}, Def:${sf(result.def)}, Dex:${sf(
+              result.dex,
+            )}, Agi:${sf(result.agi)}`,
+          );
         // if (result) ns.print(`INFO: Ascended gang member ${name}:\n      ${JSON.stringify(result)}`)
-        purchaseEquipment(name)
+        purchaseEquipment(name);
       }
-      ns.gang.setMemberTask(name, cycleTasks[taskIndex])
-    })
+      ns.gang.setMemberTask(name, cycleTasks[taskIndex]);
+    });
 
     // hire new members if possible and set them to first job for this cycle,
     // should be training probably
     if (ns.gang.canRecruitMember()) {
-      newMemberNames.forEach(name => {
+      newMemberNames.forEach((name) => {
         if (ns.gang.recruitMember(name)) {
-          ns.print(`INFO: Recruited new gang member '${name}`)
-          ns.gang.setMemberTask(name, cycleTasks[0])
-          purchaseEquipment()
+          ns.print(`INFO: Recruited new gang member '${name}`);
+          ns.gang.setMemberTask(name, cycleTasks[0]);
+          purchaseEquipment();
         }
-      })
+      });
     }
 
-    let cycleEnd = new Date(new Date().valueOf() + DURATION).toLocaleTimeString()
-    ns.print(`Next cycle at ${cycleEnd}`)
-    await ns.sleep(DURATION) // wait 5 minutes
-    cycle++
+    let cycleEnd = new Date(
+      new Date().valueOf() + DURATION,
+    ).toLocaleTimeString();
+    ns.print(`Next cycle at ${cycleEnd}`);
+    await ns.sleep(DURATION); // wait 5 minutes
+    cycle++;
   }
 
   /**
    * Purchase equipment for a gang member if we have the money
-   * 
+   *
    * @param {string} memberName Name of the gang member to purchase equipment for
    */
-   function purchaseEquipment(memberName) {
-    let { money } = ns.getPlayer()
-    upgradeEquipmentNames.forEach(equipName => {
-      let cost = ns.gang.getEquipmentCost(equipName)
-      if (money >= cost && ns.gang.purchaseEquipment(memberName, equipName)) money -= cost
-    })
+  function purchaseEquipment(memberName) {
+    let { money } = ns.getPlayer();
+    upgradeEquipmentNames.forEach((equipName) => {
+      let cost = ns.gang.getEquipmentCost(equipName);
+      if (money >= cost && ns.gang.purchaseEquipment(memberName, equipName))
+        money -= cost;
+    });
   }
 
   /**
    * Simple format for stats
-   * 
+   *
    * @param {number} value
    */
   function sf(value) {
-    if (typeof(value) !== 'number') return '???'
-    return Math.trunc(value * 1000) / 1000
+    if (typeof value !== 'number') return '???';
+    return Math.trunc(value * 1000) / 1000;
   }
 }

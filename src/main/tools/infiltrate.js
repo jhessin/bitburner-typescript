@@ -11,10 +11,10 @@
 
 const state = {
   // Name of the company that's infiltrated.
-  company: "",
+  company: '',
 
   // A copy of company, used for auto-restart so it doesn't get reset at end
-  lastCompany: "",
+  lastCompany: '',
 
   // Whether infiltration started. False means, we're
   // waiting to arrive on the infiltration screen.
@@ -26,30 +26,30 @@ const state = {
 };
 
 // automatically accept reward and re-run for the same company
-let auto = false
+let auto = false;
 
 // auto-accept reputation for faction instead of money
-let repFaction = ''
+let repFaction = '';
 
 // Speed of game actions, in milliseconds.
 const speed = 22;
 
 // Time infiltration(s)
-let infiltrationStart = 0
+let infiltrationStart = 0;
 
 // Small hack to save RAM.
 // This will work smoothly, because the script does not use
 // any "ns" functions, it's a pure browser automation tool.
-const wnd = eval("window");
-const doc = wnd["document"];
+const wnd = eval('window');
+const doc = wnd['document'];
 
 // List of all games and an automated solver.
 const infiltrationGames = [
   {
-    name: "type it backward",
+    name: 'type it backward',
     init: function (screen) {
-      const lines = getLines(getEl(screen, "p"));
-      state.game.data = lines[0].split("");
+      const lines = getLines(getEl(screen, 'p'));
+      state.game.data = lines[0].split('');
     },
     play: function (screen) {
       if (!state.game.data || !state.game.data.length) {
@@ -61,46 +61,46 @@ const infiltrationGames = [
     },
   },
   {
-    name: "enter the code",
-    init: function (screen) { },
+    name: 'enter the code',
+    init: function (screen) {},
     play: function (screen) {
-      const h4 = getEl(screen, "h4");
+      const h4 = getEl(screen, 'h4');
       const code = h4[1].textContent;
 
       switch (code) {
-        case "↑":
-          pressKey("w");
+        case '↑':
+          pressKey('w');
           break;
-        case "↓":
-          pressKey("s");
+        case '↓':
+          pressKey('s');
           break;
-        case "←":
-          pressKey("a");
+        case '←':
+          pressKey('a');
           break;
-        case "→":
-          pressKey("d");
+        case '→':
+          pressKey('d');
           break;
       }
     },
   },
   {
-    name: "close the brackets",
+    name: 'close the brackets',
     init: function (screen) {
-      const data = getLines(getEl(screen, "p"));
-      const brackets = data.join("").split("");
+      const data = getLines(getEl(screen, 'p'));
+      const brackets = data.join('').split('');
       state.game.data = [];
 
       for (let i = brackets.length - 1; i >= 0; i--) {
         const char = brackets[i];
 
-        if ("<" == char) {
-          state.game.data.push(">");
-        } else if ("(" == char) {
-          state.game.data.push(")");
-        } else if ("{" == char) {
-          state.game.data.push("}");
-        } else if ("[" == char) {
-          state.game.data.push("]");
+        if ('<' == char) {
+          state.game.data.push('>');
+        } else if ('(' == char) {
+          state.game.data.push(')');
+        } else if ('{' == char) {
+          state.game.data.push('}');
+        } else if ('[' == char) {
+          state.game.data.push(']');
         }
       }
     },
@@ -114,64 +114,68 @@ const infiltrationGames = [
     },
   },
   {
-    name: "slash when his guard is down",
+    name: 'slash when his guard is down',
     init: function (screen) {
-      state.game.data = "wait";
-      state.game.waitFrames = 45
+      state.game.data = 'wait';
+      state.game.waitFrames = 45;
     },
     play: function (screen) {
-      const data = getLines(getEl(screen, "h4")).join('\n');
+      const data = getLines(getEl(screen, 'h4')).join('\n');
 
-      const compareString = "ATTACKING!"
-      const compareString2 = "Preparing?"
-      const shouldPress = data.indexOf(compareString) >= 0 || data.indexOf(compareString2) >= 0
-      wnd.lastSlashInfo = { data }
-      if ('wait' === state.game.data && (data.indexOf(compareString) + data.indexOf(compareString2) > -2)) {
-        pressKey(" ")
-        state.game.data = "done"
+      const compareString = 'ATTACKING!';
+      const compareString2 = 'Preparing?';
+      const shouldPress =
+        data.indexOf(compareString) >= 0 || data.indexOf(compareString2) >= 0;
+      wnd.lastSlashInfo = { data };
+      if (
+        'wait' === state.game.data &&
+        data.indexOf(compareString) + data.indexOf(compareString2) > -2
+      ) {
+        pressKey(' ');
+        state.game.data = 'done';
       }
     },
   },
   {
-    name: "say something nice about the guard",
-    init: function (screen) { },
+    name: 'say something nice about the guard',
+    init: function (screen) {},
     play: function (screen) {
       const correct = [
-        "affectionate",
-        "agreeable",
-        "bright",
-        "charming",
-        "creative",
-        "determined",
-        "energetic",
-        "friendly",
-        "funny",
-        "generous",
-        "polite",
-        "likable",
-        "diplomatic",
-        "helpful",
-        "giving",
-        "kind",
-        "hardworking",
-        "patient",
-        "dynamic",
-        "loyal",
-        "straightforward",
+        'affectionate',
+        'agreeable',
+        'bright',
+        'charming',
+        'creative',
+        'determined',
+        'energetic',
+        'friendly',
+        'funny',
+        'generous',
+        'polite',
+        'likable',
+        'diplomatic',
+        'helpful',
+        'giving',
+        'kind',
+        'hardworking',
+        'patient',
+        'dynamic',
+        'loyal',
+        'straightforward',
       ];
-      const word = getLines(getEl(screen, "h5"))[1];
+      const word = getLines(getEl(screen, 'h5'))[1];
 
       if (-1 !== correct.indexOf(word)) {
-        pressKey(" ");
+        pressKey(' ');
       } else {
-        pressKey("w");
+        pressKey('w');
       }
     },
   },
   {
-    name: "remember all the mines",
+    name: 'remember all the mines',
     init: function (screen) {
-      const rows = getEl(screen, "p");
+      const rows = getEl(screen, 'p');
       let gridSize = null;
       switch (rows.length) {
         case 9:
@@ -215,10 +219,10 @@ const infiltrationGames = [
         }
       }
     },
-    play: function (screen) { },
+    play: function (screen) {},
   },
   {
-    name: "mark all the mines",
+    name: 'mark all the mines',
     init: function (screen) {
       state.game.x = 0;
       state.game.y = 0;
@@ -229,7 +233,7 @@ const infiltrationGames = [
       let { data, x, y, cols, dir } = state.game;
 
       if (data[y][x]) {
-        pressKey(" ");
+        pressKey(' ');
         data[y][x] = false;
       }
 
@@ -239,9 +243,9 @@ const infiltrationGames = [
         x = Math.max(0, Math.min(cols - 1, x));
         y++;
         dir *= -1;
-        pressKey("s");
+        pressKey('s');
       } else {
-        pressKey(dir > 0 ? "d" : "a");
+        pressKey(dir > 0 ? 'd' : 'a');
       }
 
       state.game.data = data;
@@ -251,10 +255,10 @@ const infiltrationGames = [
     },
   },
   {
-    name: "match the symbols",
+    name: 'match the symbols',
     init: function (screen) {
-      const data = getLines(getEl(screen, "h5 span"));
-      const rows = getLines(getEl(screen, "p"));
+      const data = getLines(getEl(screen, 'h5 span'));
+      const rows = getLines(getEl(screen, 'p'));
       const keypad = [];
       const targets = [];
       let gridSize = null;
@@ -289,7 +293,6 @@ const infiltrationGames = [
       for (let i = 0; i < gridSize[1]; i++) {
         keypad[i] = [];
         for (let y = 0; y < gridSize[0]; y++) {
-
           keypad[i].push(rows[index]);
           index += 1;
         }
@@ -324,18 +327,18 @@ const infiltrationGames = [
 
       if (to_y < y) {
         y--;
-        pressKey("w");
+        pressKey('w');
       } else if (to_y > y) {
         y++;
-        pressKey("s");
+        pressKey('s');
       } else if (to_x < x) {
         x--;
-        pressKey("a");
+        pressKey('a');
       } else if (to_x > x) {
         x++;
-        pressKey("d");
+        pressKey('d');
       } else {
-        pressKey(" ");
+        pressKey(' ');
         state.game.data.shift();
       }
 
@@ -344,14 +347,14 @@ const infiltrationGames = [
     },
   },
   {
-    name: "cut the wires with the following properties",
+    name: 'cut the wires with the following properties',
     init: function (screen) {
-      let numberHack = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+      let numberHack = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
       const colors = {
-        red: "red",
-        white: "white",
-        blue: "blue",
-        "rgb(255, 193, 7)": "yellow",
+        red: 'red',
+        white: 'white',
+        blue: 'blue',
+        'rgb(255, 193, 7)': 'yellow',
       };
       const wireColor = {
         red: [],
@@ -360,13 +363,13 @@ const infiltrationGames = [
         yellow: [],
       };
       //gather the instructions
-      var instructions = []
+      var instructions = [];
       for (let child of screen.children) instructions.push(child);
       var wiresData = instructions.pop();
       instructions.shift();
       instructions = getLines(instructions);
       //get the wire information
-      const samples = getEl(wiresData, "p");
+      const samples = getEl(wiresData, 'p');
       const wires = [];
       //get the amount of wires
       let wireCount = 0;
@@ -396,11 +399,11 @@ const infiltrationGames = [
         if (!line || line.length < 10) {
           continue;
         }
-        if (-1 !== line.indexOf("cut wires number")) {
+        if (-1 !== line.indexOf('cut wires number')) {
           const parts = line.split(/(number\s*|\.)/);
           wires.push(parseInt(parts[2]));
         }
-        if (-1 !== line.indexOf("cut all wires colored")) {
+        if (-1 !== line.indexOf('cut all wires colored')) {
           const parts = line.split(/(colored\s*|\.)/);
           const color = parts[2];
 
@@ -432,17 +435,18 @@ const infiltrationGames = [
 /** @param {NS} ns **/
 export async function main(ns) {
   const args = ns.flags([
-    ["start", false],
-    ["stop", false],
-    ["status", false],
-    ["quiet", false],
-    ["auto", false],
-    ["faction", ''],
+    ['start', false],
+    ['stop', false],
+    ['status', false],
+    ['quiet', false],
+    ['auto', false],
+    ['faction', ''],
   ]);
 
-  auto = args.auto
+  auto = args.auto;
 
-  repFaction = args.faction && args.faction && args.faction.length && args.faction
+  repFaction =
+    args.faction && args.faction && args.faction.length && args.faction;
 
   function print(msg) {
     if (!args.quiet) {
@@ -452,15 +456,15 @@ export async function main(ns) {
 
   if (args.status) {
     if (wnd.tmrAutoInf) {
-      print("Automated infiltration is active");
+      print('Automated infiltration is active');
     } else {
-      print("Automated infiltration is inactive");
+      print('Automated infiltration is inactive');
     }
     return;
   }
 
   if (wnd.tmrAutoInf) {
-    print("Stopping automated infiltration...");
+    print('Stopping automated infiltration...');
     clearInterval(wnd.tmrAutoInf);
     delete wnd.tmrAutoInf;
   }
@@ -469,14 +473,15 @@ export async function main(ns) {
     return;
   }
 
-  auto = args.auto
+  auto = args.auto;
 
-  repFaction = args.faction && args.faction && args.faction.length && args.faction
+  repFaction =
+    args.faction && args.faction && args.faction.length && args.faction;
 
   print(
-    "Automated infiltration is enabled...\nWhen you visit the infiltration screen of any company, all tasks are completed automatically.\n" +
-    `Auto? ${auto}\n` +
-    `Faction or Money? ${repFaction || 'MONEY'}`
+    'Automated infiltration is enabled...\nWhen you visit the infiltration screen of any company, all tasks are completed automatically.\n' +
+      `Auto? ${auto}\n` +
+      `Faction or Money? ${repFaction || 'MONEY'}`,
   );
 
   endInfiltration();
@@ -505,28 +510,28 @@ function infLoop() {
  * container.
  */
 function getEl(parent, selector) {
-  let prefix = ":scope";
+  let prefix = ':scope';
 
-  if ("string" === typeof parent) {
+  if ('string' === typeof parent) {
     selector = parent;
     parent = doc;
 
-    prefix = ".MuiBox-root>.MuiBox-root>.MuiBox-root";
+    prefix = '.MuiBox-root>.MuiBox-root>.MuiBox-root';
 
     if (!doc.querySelectorAll(prefix).length) {
-      prefix = ".MuiBox-root>.MuiBox-root>.MuiGrid-root";
+      prefix = '.MuiBox-root>.MuiBox-root>.MuiGrid-root';
     }
     if (!doc.querySelectorAll(prefix).length) {
-      prefix = ".MuiContainer-root>.MuiPaper-root";
+      prefix = '.MuiContainer-root>.MuiPaper-root';
     }
     if (!doc.querySelectorAll(prefix).length) {
       return [];
     }
   }
 
-  selector = selector.split(",");
+  selector = selector.split(',');
   selector = selector.map((item) => `${prefix} ${item}`);
-  selector = selector.join(",");
+  selector = selector.join(',');
 
   return parent.querySelectorAll(selector);
 }
@@ -561,14 +566,14 @@ function getLines(elements) {
   return lines;
 }
 
-let postTimeout = null
+let postTimeout = null;
 
 /**
  * Reset the state after infiltration is done.
  */
 function endInfiltration() {
   unwrapEventListeners();
-  state.company = "";
+  state.company = '';
   state.started = false;
   // cancelMyTimeout()
   // acceptMoney() // TODO: needed?
@@ -581,12 +586,12 @@ function endInfiltration() {
  */
 function pressKey(keyOrCode) {
   let keyCode = 0;
-  let key = "";
+  let key = '';
 
-  if ("string" === typeof keyOrCode && keyOrCode.length > 0) {
+  if ('string' === typeof keyOrCode && keyOrCode.length > 0) {
     key = keyOrCode.toLowerCase().substr(0, 1);
     keyCode = key.charCodeAt(0);
-  } else if ("number" === typeof keyOrCode) {
+  } else if ('number' === typeof keyOrCode) {
     keyCode = keyOrCode;
     key = String.fromCharCode(keyCode);
   }
@@ -604,7 +609,7 @@ function pressKey(keyOrCode) {
     doc.dispatchEvent(keyboardEvent);
   }
 
-  sendEvent("keydown")
+  sendEvent('keydown');
 }
 
 /**
@@ -618,17 +623,17 @@ function waitForStart() {
     return;
   }
 
-  const h4 = getEl("h4");
+  const h4 = getEl('h4');
 
   if (!h4.length) {
     return;
   }
   const title = h4[0].textContent;
-  if (0 !== title.indexOf("Infiltrating")) {
+  if (0 !== title.indexOf('Infiltrating')) {
     return;
   }
 
-  const btnStart = filterByText(getEl("button"), "Start");
+  const btnStart = filterByText(getEl('button'), 'Start');
   if (!btnStart) {
     return;
   }
@@ -638,7 +643,7 @@ function waitForStart() {
   state.started = true;
   wrapEventListeners();
 
-  console.log("Start automatic infiltration of", state.company);
+  console.log('Start automatic infiltration of', state.company);
   btnStart.click();
 }
 
@@ -646,70 +651,79 @@ function waitForStart() {
  * Identify the current infiltration game.
  */
 function playGame() {
-  const screens = doc.querySelectorAll(".MuiContainer-root");
-  wnd.info = { screens }
+  const screens = doc.querySelectorAll('.MuiContainer-root');
+  wnd.info = { screens };
 
   if (!screens.length) {
-    wnd.info = { screens, messge: 'no screens.length, calling endInfiltration()' }
+    wnd.info = {
+      screens,
+      messge: 'no screens.length, calling endInfiltration()',
+    };
     endInfiltration();
     selectCompany();
     return;
   }
   if (screens[0].children.length < 3) {
-    wnd.info = { screens, message: 'screens.children.length < 3, calling endInfiltration()' }
-    if (!postTimeout && screens[0].children[1].children[0].innerText === 'Infiltration successful!') {
-      acceptMoney('spam') // I think this is spamming, yes, need to check for infiltration complete, but where
+    wnd.info = {
+      screens,
+      message: 'screens.children.length < 3, calling endInfiltration()',
+    };
+    if (
+      !postTimeout &&
+      screens[0].children[1].children[0].innerText ===
+        'Infiltration successful!'
+    ) {
+      acceptMoney('spam'); // I think this is spamming, yes, need to check for infiltration complete, but where
     }
     return;
   }
 
   const screen = screens[0].children[2];
-  const h4 = getEl(screen, "h4");
+  const h4 = getEl(screen, 'h4');
 
   if (!h4.length) {
-    wnd.info = { screens, message: 'no h4.length, calling endInfiltration()' }
+    wnd.info = { screens, message: 'no h4.length, calling endInfiltration()' };
     endInfiltration();
     return;
   }
 
-  cancelMyTimeout()
+  cancelMyTimeout();
 
   const title = h4[0].textContent.trim().toLowerCase().split(/[!.(]/)[0];
-  wnd.info = { screens, message: 'searching for something', title }
+  wnd.info = { screens, message: 'searching for something', title };
 
-  if ("infiltration successful" === title) {
+  if ('infiltration successful' === title) {
     // NOTE: I get screens.length < 3 on success, not this...
-    wnd.info = { screens, message: 'infiltration successful!' }
+    wnd.info = { screens, message: 'infiltration successful!' };
     endInfiltration();
     return;
   } else {
-    wnd.last_title = title
+    wnd.last_title = title;
   }
 
-  if ("get ready" === title) {
-    if (!infiltrationStart) infiltrationStart = new Date().valueOf()
+  if ('get ready' === title) {
+    if (!infiltrationStart) infiltrationStart = new Date().valueOf();
     return;
   }
 
   const game = infiltrationGames.find((game) => game.name === title);
-  wnd.STATE = { game, screen, h4, title }
+  wnd.STATE = { game, screen, h4, title };
 
   if (game) {
-    if (!infiltrationStart) infiltrationStart = new Date().valueOf()
+    if (!infiltrationStart) infiltrationStart = new Date().valueOf();
     if (state.game.current !== title) {
       state.game.current = title;
       game.init(screen);
-      game.waitFrames = Math.max(game.waitFrames || 0, 15)
+      game.waitFrames = Math.max(game.waitFrames || 0, 15);
     } else {
       if (game.waitFrames > 0) {
-        game.waitFrames--
+        game.waitFrames--;
       } else {
         game.play(screen);
       }
     }
-
   } else {
-    console.error("Unknown game:", title);
+    console.error('Unknown game:', title);
   }
 }
 
@@ -725,21 +739,21 @@ function wrapEventListeners() {
     doc._addEventListener = doc.addEventListener;
 
     doc.addEventListener = function (type, callback, options) {
-      if ("undefined" === typeof options) {
+      if ('undefined' === typeof options) {
         options = false;
       }
       let handler = false;
 
       // For this script, we only want to modify "keydown" events.
-      if ("keydown" === type) {
+      if ('keydown' === type) {
         handler = function (...args) {
           if (!args[0].isTrusted) {
             const hackedEv = {};
 
             for (const key in args[0]) {
-              if ("isTrusted" === key) {
+              if ('isTrusted' === key) {
                 hackedEv.isTrusted = true;
-              } else if ("function" === typeof args[0][key]) {
+              } else if ('function' === typeof args[0][key]) {
                 hackedEv[key] = args[0][key].bind(args[0]);
               } else {
                 hackedEv[key] = args[0][key];
@@ -753,7 +767,7 @@ function wrapEventListeners() {
         };
 
         for (const prop in callback) {
-          if ("function" === typeof callback[prop]) {
+          if ('function' === typeof callback[prop]) {
             handler[prop] = callback[prop].bind(callback);
           } else {
             handler[prop] = callback[prop];
@@ -776,7 +790,7 @@ function wrapEventListeners() {
       return this._addEventListener(
         type,
         handler ? handler : callback,
-        options
+        options,
       );
     };
   }
@@ -785,7 +799,7 @@ function wrapEventListeners() {
     doc._removeEventListener = doc.removeEventListener;
 
     doc.removeEventListener = function (type, callback, options) {
-      if ("undefined" === typeof options) {
+      if ('undefined' === typeof options) {
         options = false;
       }
 
@@ -834,8 +848,6 @@ function unwrapEventListeners() {
   delete doc.eventListeners;
 }
 
-
-
 /*================================================================================
   = Auto Mode
   ================================================================================*/
@@ -844,90 +856,117 @@ function unwrapEventListeners() {
  * Select a company and begin infiltration for auto mode
  */
 function selectCompany() {
-  if (!auto) return
-  cancelMyTimeout()
+  if (!auto) return;
+  cancelMyTimeout();
 
   postTimeout = setTimeout(() => {
-    postTimeout = null
+    postTimeout = null;
 
-    var selector = 'span[aria-label="' + state.lastCompany + '"]'
-    var companyEle = doc.querySelector(selector)
+    var selector = 'span[aria-label="' + state.lastCompany + '"]';
+    var companyEle = doc.querySelector(selector);
     if (companyEle) {
       if (infiltrationStart) {
-        console.info(`FAILED INFILTRATION - ${((new Date().valueOf() - infiltrationStart) / 1000).toFixed(1)} sec, last was ${last_title}`);
-        infiltrationStart = 0
+        console.info(
+          `FAILED INFILTRATION - ${(
+            (new Date().valueOf() - infiltrationStart) /
+            1000
+          ).toFixed(1)} sec, last was ${last_title}`,
+        );
+        infiltrationStart = 0;
       }
-      companyEle.click()
+      companyEle.click();
       postTimeout = setTimeout(() => {
-        postTimeout = null
-        var btn = Array.from(doc.querySelectorAll('button')).find(x => x.innerText.indexOf('Infiltrate Company') >= 0)
-        if (btn) btn[Object.keys(btn)[1]].onClick({ isTrusted: true })
-      }, 1000)
+        postTimeout = null;
+        var btn = Array.from(doc.querySelectorAll('button')).find(
+          (x) => x.innerText.indexOf('Infiltrate Company') >= 0,
+        );
+        if (btn) btn[Object.keys(btn)[1]].onClick({ isTrusted: true });
+      }, 1000);
     }
-  }, 1000)
+  }, 1000);
 }
 
 // accept money bonus, hand off to acceptReputation() if repFaction is set
 function acceptMoney(msg) {
-  if (!auto) return
-  if (postTimeout) return
+  if (!auto) return;
+  if (postTimeout) return;
 
   // console.log('acceptMoney:', msg)
-  cancelMyTimeout()
+  cancelMyTimeout();
 
   if (repFaction && repFaction.length) {
-    acceptReputation()
-    return
+    acceptReputation();
+    return;
   }
 
   postTimeout = setTimeout(() => {
     // console.log('acceptMoney()', msg)
-    cancelMyTimeout()
-    var btn = Array.from(doc.querySelectorAll('button')).find(x => x.innerText.indexOf('Sell for') >= 0)
+    cancelMyTimeout();
+    var btn = Array.from(doc.querySelectorAll('button')).find(
+      (x) => x.innerText.indexOf('Sell for') >= 0,
+    );
     if (btn) {
       if (infiltrationStart) {
-        console.info(`SUCCESSFUL INFILTRATION - ${((new Date().valueOf() - infiltrationStart) / 1000).toFixed(1)} sec: ${btn.innerText}`);
-        infiltrationStart = 0
+        console.info(
+          `SUCCESSFUL INFILTRATION - ${(
+            (new Date().valueOf() - infiltrationStart) /
+            1000
+          ).toFixed(1)} sec: ${btn.innerText}`,
+        );
+        infiltrationStart = 0;
       }
-      btn[Object.keys(btn)[1]].onClick({ isTrusted: true })
+      btn[Object.keys(btn)[1]].onClick({ isTrusted: true });
     } else {
-      console.log(`Failure!  ${ms}`)
+      console.log(`Failure!  ${ms}`);
     }
-    selectCompany()
-  }, 500)
+    selectCompany();
+  }, 500);
 }
 
 // accept reputation bonus
 function acceptReputation() {
-  cancelMyTimeout()
+  cancelMyTimeout();
 
   postTimeout = setTimeout(() => {
-    postTimeout = null
+    postTimeout = null;
 
-    var e = Array.from(doc.querySelectorAll('[role="button"]')).find(x => x.innerText.indexOf('none') >= 0);
+    var e = Array.from(doc.querySelectorAll('[role="button"]')).find(
+      (x) => x.innerText.indexOf('none') >= 0,
+    );
     if (e) {
-      e[Object.keys(e)[1]].onKeyDown(new KeyboardEvent('keydown', { 'key': ' ' }));
+      e[Object.keys(e)[1]].onKeyDown(
+        new KeyboardEvent('keydown', { key: ' ' }),
+      );
       postTimeout = setTimeout(() => {
-        var e2 = Array.from(doc.querySelectorAll('li[role="option"]')).find(x => x.innerText.indexOf(repFaction) >= 0)
-        e2.click()
+        var e2 = Array.from(doc.querySelectorAll('li[role="option"]')).find(
+          (x) => x.innerText.indexOf(repFaction) >= 0,
+        );
+        e2.click();
         postTimeout = setTimeout(() => {
-          var btn = Array.from(doc.querySelectorAll('button')).find(x => x.innerText.indexOf('Trade for') >= 0)
+          var btn = Array.from(doc.querySelectorAll('button')).find(
+            (x) => x.innerText.indexOf('Trade for') >= 0,
+          );
           if (btn) {
-            btn[Object.keys(btn)[1]].onClick({ isTrusted: true })
+            btn[Object.keys(btn)[1]].onClick({ isTrusted: true });
             if (infiltrationStart) {
-              console.info(`SUCCESSFUL INFILTRATION - ${((new Date().valueOf() - infiltrationStart) / 1000).toFixed(1)} sec - ${btn.innerText}`);
-              infiltrationStart = 0
+              console.info(
+                `SUCCESSFUL INFILTRATION - ${(
+                  (new Date().valueOf() - infiltrationStart) /
+                  1000
+                ).toFixed(1)} sec - ${btn.innerText}`,
+              );
+              infiltrationStart = 0;
             }
           }
-        })
-      }, 500)
+        });
+      }, 500);
     }
-  }, 1000)
+  }, 1000);
 }
 
 function cancelMyTimeout() {
   if (postTimeout) {
-    clearTimeout(postTimeout)
-    postTimeout = null
+    clearTimeout(postTimeout);
+    postTimeout = null;
   }
 }

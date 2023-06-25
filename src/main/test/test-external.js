@@ -1,18 +1,21 @@
-import { openWindow, log, table } from '/external.js'
+import { openWindow, log, table } from '/external.js';
 
 /** @param {NS} ns */
 export async function main(ns) {
-  const url = 'https://jasongoemaat.github.io/bitburner-vue-viewer/'
-  openWindow(url)
-  await ns.sleep(5000) // time for window to open and it to start listening for messages
-  
+  const url = 'https://jasongoemaat.github.io/bitburner-vue-viewer/';
+  openWindow(url);
+  await ns.sleep(5000); // time for window to open and it to start listening for messages
+
   // showing logging
-  log('test-external.js', `Hello, world!
-  this is pretty cool, being able to log to an external window, right?`)
+  log(
+    'test-external.js',
+    `Hello, world!
+  this is pretty cool, being able to log to an external window, right?`,
+  );
   return;
 }
 
-  // openWindow('http://127.0.0.1:5173/bitburner-vue-viewer/')
+// openWindow('http://127.0.0.1:5173/bitburner-vue-viewer/')
 
 //   // showing tables, output server list
 //   /** @type {Object<string,Server} */
