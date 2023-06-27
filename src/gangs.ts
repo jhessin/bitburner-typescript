@@ -38,11 +38,12 @@ let gms: string[] = [];
 
 export async function main(ns: NS) {
   let lastAscension = 0;
-  function avgSkills(member: string) {
-    const info = ns.gang.getMemberInformation(member);
-    return (
-      (info.str + info.def + info.dex + info.agi + info.cha + info.hack) / 6
-    );
+
+  function heroSkills(gm: string) {
+    const info = ns.gang.getMemberInformation(gm);
+    // These are the skills for ethical hacking
+    // Vigilante justice probably uses different ones.
+    return info.hack + info.cha;
   }
 
   function getThresholds(): string[] {
@@ -183,7 +184,7 @@ export async function main(ns: NS) {
     // find the hero
     let hero = gms[0];
     for (const gm of gms) {
-      if (avgSkills(gm) > avgSkills(hero)) {
+      if (heroSkills(gm) > heroSkills(hero)) {
         hero = gm;
       }
     }
@@ -197,7 +198,7 @@ export async function main(ns: NS) {
   function splitCash(task = respectTask) {
     let hero = gms[0];
     for (const gm of gms) {
-      if (avgSkills(gm) > avgSkills(hero)) {
+      if (heroSkills(gm) > heroSkills(hero)) {
         hero = gm;
       }
     }
