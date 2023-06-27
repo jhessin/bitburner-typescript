@@ -39,16 +39,16 @@ let gms: string[] = [];
 export async function main(ns: NS) {
   let lastAscension = 0;
 
-  function heroSkills(gm: string) {
+  function getSkills(gm: string, task: string = wantedTask) {
     const skills = ns.gang.getMemberInformation(gm);
-    const task = ns.gang.getTaskStats(wantedTask);
+    const taskStats = ns.gang.getTaskStats(task);
     return (
-      skills.hack * task.hackWeight +
-      skills.str * task.strWeight +
-      skills.def * task.defWeight +
-      skills.dex * task.dexWeight +
-      skills.agi * task.agiWeight +
-      skills.cha * task.chaWeight
+      skills.hack * taskStats.hackWeight +
+      skills.str * taskStats.strWeight +
+      skills.def * taskStats.defWeight +
+      skills.dex * taskStats.dexWeight +
+      skills.agi * taskStats.agiWeight +
+      skills.cha * taskStats.chaWeight
     );
   }
 
@@ -86,9 +86,16 @@ export async function main(ns: NS) {
   }
 
   function stats() {
+    const allAugs = ns.gang
+      .getEquipmentNames()
+      .filter((eq) =>
+        ns.gang.getEquipmentType(eq).toLowerCase().startsWith('aug'),
+      );
     for (const gm of gms) {
       const info = ns.gang.getMemberInformation(gm);
+      const augsNeeded = allAugs.length - info.augmentations.length;
       ns.print(`${gm}:      \t ${info.task}`);
+      if (augsNeeded) ns.print(`\t Needed Augs: \t ${augsNeeded}`);
     }
     for (const s of getThresholds()) {
       ns.print(s);
@@ -190,7 +197,7 @@ export async function main(ns: NS) {
     // find the hero
     let hero = gms[0];
     for (const gm of gms) {
-      if (heroSkills(gm) > heroSkills(hero)) {
+      if (getSkills(gm) > getSkills(hero)) {
         hero = gm;
       }
     }
@@ -204,17 +211,19 @@ export async function main(ns: NS) {
   function splitCash(task = respectTask) {
     let hero = gms[0];
     for (const gm of gms) {
-      if (heroSkills(gm) > heroSkills(hero)) {
+      if (getSkills(gm) > getSkills(hero)) {
         hero = gm;
       }
     }
-    gms.forEach((gm, i) => {
-      if (gm === hero)
-        success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, wantedTask));
-      else if (i < gms.length / 2)
-        success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, cashTask));
-      else success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, task));
-    });
+    gms
+      .sort((a, b) => getSkills(b, cashTask) - getSkills(a, cashTask))
+      .forEach((gm, i) => {
+        if (gm === hero)
+          success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, wantedTask));
+        else if (i < gms.length / 2)
+          success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, cashTask));
+        else success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, task));
+      });
   }
 
   // Initialize gms

@@ -7,7 +7,7 @@ const scripts: (string | string[])[] = [
   'hacknet.js',
   // 'crime.js',
   // ['main/simple.js', 'n00dles', 'all'],
-  'main/start-hgw.js',
+  // 'main/start-hgw.js',
 ];
 
 export async function main(ns: NS) {

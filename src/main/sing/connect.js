@@ -6,7 +6,7 @@ export async function main(ns) {
   // scan all servers
   //----------------------------------------------------------------------------------------------------
 
-  /** @type {Object<string,Server} */
+  /** @type {Object<string,Server>} */
   const servers = {};
 
   const scanServer = (hostname) => {
