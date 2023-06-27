@@ -13,11 +13,14 @@ const wantedTask = 'Ethical Hacking';
 // let respectTask = 'Mug People';
 let respectTask = 'Cyberterrorism';
 const RESPECT_THRESHOLD = 3e6;
-const AVG_COMBAT_THRESHOLD = 200;
-const HACKING_THRESHOLD = 200;
-const CHARISMA_THRESHOLD = 200;
+const AVG_COMBAT_THRESHOLD = 1000;
+const HACKING_THRESHOLD = 1000;
+const CHARISMA_THRESHOLD = 1000;
 const WIN_CHANCE_THRESHOLD = 0.5;
-const ASCEND_THRESHOLD = 1.1; // A 10% increase?
+// Ascending is interesting 1.0 means ascend as soon as you can - 2.0 means
+// ascend when it will give you double your bonus. Generally 1.5 seems to be the
+// best.
+const ASCEND_THRESHOLD = 2;
 
 // These are all the gangs in the game.
 const OTHER_GANGS = [
@@ -33,6 +36,38 @@ let success = false;
 let gms: string[] = [];
 
 export async function main(ns: NS) {
+  function avgSkills(member: string) {
+    const info = ns.gang.getMemberInformation(member);
+    return (
+      (info.str + info.def + info.dex + info.agi + info.cha + info.hack) / 6
+    );
+  }
+
+  function getThresholds(): string[] {
+    return [
+      `Respect threshold:     ${ns.formatNumber(RESPECT_THRESHOLD, 2)}`,
+      `Avg Combat threshold:  ${ns.formatNumber(AVG_COMBAT_THRESHOLD, 2)}`,
+      `Hacking threshold:     ${ns.formatNumber(HACKING_THRESHOLD, 2)}`,
+      `Charisma threshold:    ${ns.formatNumber(CHARISMA_THRESHOLD, 2)}`,
+      `Win Chance threshold:  ${ns.formatNumber(WIN_CHANCE_THRESHOLD, 2)}`,
+      `Ascend threshold:      ${ns.formatNumber(ASCEND_THRESHOLD, 2)}`,
+    ];
+  }
+
+  function ascensionResult(gm: string) {
+    const result = ns.gang.getAscensionResult(gm);
+    if (!result) return 0;
+    return (
+      (result.hack +
+        result.str +
+        result.def +
+        result.dex +
+        result.agi +
+        result.cha +
+        result.respect) /
+      7
+    );
+  }
   if (ns.args[0] === 'help') {
     const allTasks = ns.gang.getTaskNames();
     ns.tprint(`Valid task names:`);
@@ -42,8 +77,14 @@ export async function main(ns: NS) {
   }
 
   function stats() {
+    for (const s of getThresholds()) {
+      ns.print(s);
+    }
     for (const gm of gms) {
-      ns.print(`${gm}: \t ${ns.gang.getMemberInformation(gm).task}`);
+      const info = ns.gang.getMemberInformation(gm);
+      const ascResult = ascensionResult(gm);
+      ns.print(`${gm}:      \t ${info.task}`);
+      ns.print(`\tAscend %: \t ${ns.formatNumber(ascResult, 2)}`);
     }
   }
 
@@ -82,33 +123,28 @@ export async function main(ns: NS) {
     return (stats.str + stats.def + stats.agi + stats.dex) / 4;
   }
 
+  // This ascends and equips your gang members
   function ascend() {
     // ascend recursively
+    const augsOnly = ns.gang.getGangInformation().respect < RESPECT_THRESHOLD;
     for (const gm of gms) {
-      const result = ns.gang.getAscensionResult(gm);
-      if (!result) continue;
-      const avg =
-        (result.hack +
-          result.str +
-          result.def +
-          result.dex +
-          result.agi +
-          result.cha) /
-        6;
-      if (avg > ASCEND_THRESHOLD) success = !!ns.gang.ascendMember(gm);
-      // const augsOnly = (ns.gang.getEquipmentNames().filter(eq => ns.gang.getEquipmentType(eq).startsWith('Aug') && !ns.gang.getMemberInformation(gm).augmentations.includes(eq)))
+      // const augsOnly = (ns.gang.getEquipmentNames().filter(eq =>
+      // ns.gang.getEquipmentType(eq).startsWith('Aug') &&
+      // !ns.gang.getMemberInformation(gm).augmentations.includes(eq)))
       for (const eq of ns.gang
         .getEquipmentNames()
         .filter(
           (eq) => !ns.gang.getMemberInformation(gm).augmentations.includes(eq),
         )) {
         // Prioritize augmentations.
-        // const type = ns.gang.getEquipmentType(eq);
-        // ns.print(`Purchasing ${type}: ${eq}`)
-        // if ((augsOnly.length && type.startsWith("Aug")) || !augsOnly.length) {
-        ns.gang.purchaseEquipment(gm, eq);
-        // }
+        const type = ns.gang.getEquipmentType(eq);
+        // ns.print(`Purchasing ${type}: ${eq}`);
+        if ((augsOnly && type.startsWith('Aug')) || !augsOnly) {
+          ns.gang.purchaseEquipment(gm, eq);
+        }
       }
+      const ascResult = ascensionResult(gm);
+      if (ascResult > ASCEND_THRESHOLD) success = !!ns.gang.ascendMember(gm);
     }
   }
 
@@ -130,16 +166,29 @@ export async function main(ns: NS) {
   }
 
   function splitJustice(task = cashTask) {
-    gms.forEach((gm, i) => {
-      if (i < 1)
+    // find the hero
+    let hero = gms[0];
+    for (const gm of gms) {
+      if (avgSkills(gm) > avgSkills(hero)) {
+        hero = gm;
+      }
+    }
+    gms.forEach((gm) => {
+      if (gm === hero)
         success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, wantedTask));
       else success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, task));
     });
   }
 
   function splitCash(task = respectTask) {
+    let hero = gms[0];
+    for (const gm of gms) {
+      if (avgSkills(gm) > avgSkills(hero)) {
+        hero = gm;
+      }
+    }
     gms.forEach((gm, i) => {
-      if (i < 1)
+      if (gm === hero)
         success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, wantedTask));
       else if (i < gms.length / 2)
         success = ns.gang.setMemberTask(gm, trainAsNeeded(gm, cashTask));
@@ -149,7 +198,7 @@ export async function main(ns: NS) {
 
   // Initialize gms
   gms = ns.gang.getMemberNames();
-  let task = ns.args.join(' ') || 'ls';
+  let task = ns.args.join(' ').trim();
 
   while (true) {
     findTasks();
@@ -158,14 +207,13 @@ export async function main(ns: NS) {
       const gm = `gm${Date.now()}`;
       if (ns.gang.recruitMember(gm)) gms.push(gm);
     }
-    if (task.toLowerCase().startsWith('cash')) task = cashTask;
     ns.tail();
     ns.clearLog();
-    stats();
     ns.disableLog('ALL');
     const warChance = winChance();
     const wantedLevel = ns.gang.getGangInformation().wantedLevel;
-    if (task.startsWith('ls')) {
+    ascend();
+    if (!task) {
       if (wantedLevel > 2) {
         ns.print(`Lowest winChance = ${ns.formatPercent(warChance)}`);
         ns.print(`Wanted level = ${wantedLevel}`);
@@ -189,6 +237,9 @@ export async function main(ns: NS) {
         splitJustice();
       }
     } else {
+      if (task.toLowerCase().startsWith('cash')) task = cashTask;
+      if (task.toLowerCase().startsWith('resp')) task = respectTask;
+      if (task.toLowerCase().startsWith('ter')) task = territoryTask;
       // Start custom task
       ns.print(`running custom task ${task}`);
       if (wantedLevel > 2) {
@@ -214,8 +265,8 @@ export async function main(ns: NS) {
         splitJustice(task);
       }
     }
-    ascend();
     ns.print(success ? 'SUCCESS!' : 'FAILED!');
+    stats();
     await ns.sleep(500);
   }
 }
