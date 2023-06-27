@@ -1,15 +1,19 @@
 import type { NS } from '../NetscriptDefinitions';
 
-const scripts = [
-  // "work.js",
-  // "gangs.js",
-  'crack.js',
-  'crime.js',
-  'batching/main.js',
+const scripts: (string | string[])[] = [
+  'work.js',
+  'gangs.js',
+  'auto-crack.js',
+  // 'crime.js',
+  // ['main/simple.js', 'n00dles', 'all'],
+  'main/start-hgw.js',
 ];
 
 export async function main(ns: NS) {
   for (const script of scripts) {
-    ns.run(script);
+    if (typeof script === 'string') ns.run(script);
+    else {
+      ns.run(script[0], 1, ...script.slice(1));
+    }
   }
 }
