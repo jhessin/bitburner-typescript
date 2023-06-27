@@ -63,20 +63,29 @@ export async function main(ns: NS) {
     ];
   }
 
+  // This should calculate a value - the highest of which will be ascended.
   function ascensionResult(gm: string) {
     const result = ns.gang.getAscensionResult(gm);
+    const current = ns.gang.getMemberInformation(gm);
     if (!result) return 0;
     return (
-      (result.hack +
-        result.str +
-        result.def +
-        result.dex +
-        result.agi +
-        result.cha +
-        result.respect) /
-      7
+      // (result.hack +
+      //   result.str +
+      //   result.def +
+      //   result.dex +
+      //   result.agi +
+      //   result.cha +
+      //   result.respect) /
+      1 /
+      (current.hack_asc_mult +
+        current.str_asc_mult +
+        current.def_asc_mult +
+        current.dex_asc_mult +
+        current.agi_asc_mult +
+        current.cha_asc_mult)
     );
   }
+
   if (ns.args[0] === 'help') {
     const allTasks = ns.gang.getTaskNames();
     ns.tprint(`Valid task names:`);
@@ -91,11 +100,18 @@ export async function main(ns: NS) {
       .filter((eq) =>
         ns.gang.getEquipmentType(eq).toLowerCase().startsWith('aug'),
       );
+    let bestAscender = gms[0];
+    for (const gm of gms) {
+      if (ascensionResult(gm) > ascensionResult(bestAscender))
+        bestAscender = gm;
+    }
     for (const gm of gms) {
       const info = ns.gang.getMemberInformation(gm);
       const augsNeeded = allAugs.length - info.augmentations.length;
       ns.print(`${gm}:      \t ${info.task}`);
       if (augsNeeded) ns.print(`\t Needed Augs: \t ${augsNeeded}`);
+      ns.print(`\tAscend Res: \t ${ns.formatNumber(ascensionResult(gm), 3)} `);
+      if (gm === bestAscender) ns.print('^^^ BEST ASCENDER ^^^');
     }
     for (const s of getThresholds()) {
       ns.print(s);
@@ -149,7 +165,6 @@ export async function main(ns: NS) {
 
   // This ascends and equips your gang members
   function ascend() {
-    // ascend recursively
     const augsOnly = ns.gang.getGangInformation().respect < RESPECT_THRESHOLD;
     let bestAscender = gms[0];
     for (const gm of gms) {
