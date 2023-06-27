@@ -2,7 +2,7 @@
 
 import { NS } from '../NetscriptDefinitions';
 
-const cashPercent = 0.9;
+const cashPercent = 0.2;
 
 /** @param {NS} ns */
 export async function main(ns: NS) {

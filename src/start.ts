@@ -4,6 +4,7 @@ const scripts: (string | string[])[] = [
   'work.js',
   'gangs.js',
   'auto-crack.js',
+  'hacknet.js',
   // 'crime.js',
   // ['main/simple.js', 'n00dles', 'all'],
   'main/start-hgw.js',

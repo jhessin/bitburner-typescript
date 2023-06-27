@@ -40,10 +40,16 @@ export async function main(ns: NS) {
   let lastAscension = 0;
 
   function heroSkills(gm: string) {
-    const info = ns.gang.getMemberInformation(gm);
-    // These are the skills for ethical hacking
-    // Vigilante justice probably uses different ones.
-    return info.hack + info.cha;
+    const skills = ns.gang.getMemberInformation(gm);
+    const task = ns.gang.getTaskStats(wantedTask);
+    return (
+      skills.hack * task.hackWeight +
+      skills.str * task.strWeight +
+      skills.def * task.defWeight +
+      skills.dex * task.dexWeight +
+      skills.agi * task.agiWeight +
+      skills.cha * task.chaWeight
+    );
   }
 
   function getThresholds(): string[] {
@@ -80,6 +86,10 @@ export async function main(ns: NS) {
   }
 
   function stats() {
+    for (const gm of gms) {
+      const info = ns.gang.getMemberInformation(gm);
+      ns.print(`${gm}:      \t ${info.task}`);
+    }
     for (const s of getThresholds()) {
       ns.print(s);
     }
@@ -92,10 +102,6 @@ export async function main(ns: NS) {
       );
     } else {
       ns.print(`Time since last ascension: \t You have not yet ascended.`);
-    }
-    for (const gm of gms) {
-      const info = ns.gang.getMemberInformation(gm);
-      ns.print(`${gm}:      \t ${info.task}`);
     }
   }
 
@@ -280,8 +286,8 @@ export async function main(ns: NS) {
         splitJustice(task);
       }
     }
-    ns.print(success ? 'SUCCESS!' : 'FAILED!');
     stats();
+    ns.print(success ? 'SUCCESS!' : 'FAILED!');
     await ns.sleep(500);
   }
 }
