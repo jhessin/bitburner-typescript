@@ -21,6 +21,7 @@ const WIN_CHANCE_THRESHOLD = 0.5;
 // ascend when it will give you double your bonus. Generally 1.5 seems to be the
 // best.
 const ASCEND_THRESHOLD = 2;
+const MINUTES_BETWEEN_ASCENSIONS = 5;
 
 // These are all the gangs in the game.
 const OTHER_GANGS = [
@@ -36,6 +37,7 @@ let success = false;
 let gms: string[] = [];
 
 export async function main(ns: NS) {
+  let lastAscension = 0;
   function avgSkills(member: string) {
     const info = ns.gang.getMemberInformation(member);
     return (
@@ -80,11 +82,19 @@ export async function main(ns: NS) {
     for (const s of getThresholds()) {
       ns.print(s);
     }
+    const timeSinceLastAscension = lastAscension
+      ? Date.now() - lastAscension
+      : lastAscension;
+    if (timeSinceLastAscension) {
+      ns.print(
+        `Time since last ascension: \t ${ns.tFormat(timeSinceLastAscension)}`,
+      );
+    } else {
+      ns.print(`Time since last ascension: \t You have not yet ascended.`);
+    }
     for (const gm of gms) {
       const info = ns.gang.getMemberInformation(gm);
-      const ascResult = ascensionResult(gm);
       ns.print(`${gm}:      \t ${info.task}`);
-      ns.print(`\tAscend %: \t ${ns.formatNumber(ascResult, 2)}`);
     }
   }
 
@@ -127,6 +137,7 @@ export async function main(ns: NS) {
   function ascend() {
     // ascend recursively
     const augsOnly = ns.gang.getGangInformation().respect < RESPECT_THRESHOLD;
+    let bestAscender = gms[0];
     for (const gm of gms) {
       // const augsOnly = (ns.gang.getEquipmentNames().filter(eq =>
       // ns.gang.getEquipmentType(eq).startsWith('Aug') &&
@@ -143,9 +154,12 @@ export async function main(ns: NS) {
           ns.gang.purchaseEquipment(gm, eq);
         }
       }
-      const ascResult = ascensionResult(gm);
-      if (ascResult > ASCEND_THRESHOLD) success = !!ns.gang.ascendMember(gm);
+      if (ascensionResult(gm) > ascensionResult(bestAscender))
+        bestAscender = gm;
     }
+    if (Date.now() - lastAscension < MINUTES_BETWEEN_ASCENSIONS * 60000) return;
+    success = !!ns.gang.ascendMember(bestAscender);
+    lastAscension = Date.now();
   }
 
   function winChance() {
