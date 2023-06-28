@@ -3,18 +3,17 @@ import type { NS } from '../NetscriptDefinitions';
 const MinutesToPhase2 = 2;
 
 const scripts: (string | string[])[] = [
-  'work.js',
   'gangs.js',
   'auto-crack.js',
   'hacknet.js',
-  // 'crime.js',
-  // ['main/simple.js', 'n00dles', 'all'],
-  // 'main/start-hgw.js',
+  'crime.js',
+  ['main/simple.js', 'n00dles', 'all'],
 ];
 
 const phase2Scripts: (string | string[])[] = [
-  ['main/tools/servers.js', 'buy', 'big', 'auto'],
-  ['main/start-hgw.js'],
+  'work.js',
+  // ['main/tools/servers.js', 'buy', 'big', 'auto'],
+  // ['main/start-hgw.js'],
 ];
 
 export async function main(ns: NS) {
