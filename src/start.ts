@@ -3,15 +3,18 @@ import type { NS } from '../NetscriptDefinitions';
 const MinutesToPhase2 = 2;
 
 const scripts: (string | string[])[] = [
-  'gangs.js',
-  'auto-crack.js',
-  'hacknet.js',
-  'crime.js',
-  ['main/simple.js', 'n00dles', 'all'],
+  'main/tools/scan.js',
+  // 'gangs.js',
+  // 'hacknet.js',
+  // 'crime.js',
+  // 'work.js',
+  ['crime.js', 'karma'],
 ];
 
 const phase2Scripts: (string | string[])[] = [
-  'work.js',
+  'auto-crack.js',
+  // ['main/simple.js', 'n00dles', 'all'],
+  ['main/simple.js', 'johnson-ortho', 'all'],
   // ['main/tools/servers.js', 'buy', 'big', 'auto'],
   // ['main/start-hgw.js'],
 ];
@@ -28,6 +31,7 @@ export async function main(ns: NS) {
   const startTime = Date.now();
   const phase2Time = startTime + MinutesToPhase2 * 60000;
 
+  if (!phase2Scripts.length) return;
   while (Date.now() < phase2Time) {
     ns.tail();
     ns.disableLog('ALL');
