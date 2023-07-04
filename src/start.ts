@@ -9,10 +9,10 @@ const scripts: (string | string[])[] = [
   // 'crime.js',
   // 'work.js',
   ['crime.js', 'karma'],
+  'auto-crack.js',
 ];
 
 const phase2Scripts: (string | string[])[] = [
-  'auto-crack.js',
   // ['main/simple.js', 'n00dles', 'all'],
   ['main/simple.js', 'johnson-ortho', 'all'],
   // ['main/tools/servers.js', 'buy', 'big', 'auto'],
