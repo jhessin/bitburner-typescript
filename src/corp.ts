@@ -131,7 +131,9 @@ export async function main(ns: NS) {
     funds = corp.funds;
 
     // Prioritize unlocks
-    for (const unlock of ns.corporation.getConstants().unlockNames) {
+    for (const unlock of ns.corporation
+      .getConstants()
+      .unlockNames.filter((unlock) => !ns.corporation.hasUnlock(unlock))) {
       const cost = ns.corporation.getUnlockCost(unlock);
       purchases.push([
         `purchase unlock ${unlock}`,
